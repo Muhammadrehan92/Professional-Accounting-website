@@ -245,10 +245,19 @@ function renderSearchResults(query) {
         return;
     }
 
+    const isSubpage = window.location.pathname.includes("/pages/");
+
     let html = `<div class="search-group-title">${query === "" ? "Quick Access Links" : "Matching Results"}</div>`;
     filtered.forEach(item => {
+        let finalLink = item.link;
+        if (isSubpage) {
+            finalLink = item.link.startsWith("pages/") ? item.link.replace("pages/", "") : item.link;
+        } else {
+            finalLink = item.link.startsWith("pages/") || item.link === "index.html" ? item.link : "pages/" + item.link;
+        }
+
         html += `
-            <a href="${item.link}" class="search-result-item">
+            <a href="${finalLink}" class="search-result-item">
                 <div>
                     <i class="fas ${item.icon}" style="margin-right: 8px; color: var(--primary);"></i>
                     <strong>${item.title}</strong>
