@@ -1,0 +1,237 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Cash Book | Professional Accounting System</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.7.2/css/all.min.css">
+    <link rel="stylesheet" href="../css/style.css">
+</head>
+<body>
+
+<aside class="sidebar" id="sidebar">
+    <div class="sidebar-logo"><div class="logo-icon"><i class="fas fa-calculator"></i></div><div class="logo-text"><strong>Accountex</strong><span>Accounting System</span></div></div>
+    <nav class="sidebar-nav">
+        <span class="nav-title">MAIN MENU</span>
+        <a href="../index.html" class="nav-link"><i class="fas fa-house"></i><span>Dashboard</span></a>
+        <a href="ledger.html" class="nav-link"><i class="fas fa-book"></i><span>Ledger</span></a>
+        <a href="receivable.html" class="nav-link"><i class="fas fa-arrow-down"></i><span>Receivable</span></a>
+        <a href="payable.html" class="nav-link"><i class="fas fa-arrow-up"></i><span>Payable</span></a>
+        <a href="cashbook.html" class="nav-link active"><i class="fas fa-cash-register"></i><span>Cash Book</span></a>
+        <span class="nav-title">BUSINESS</span>
+        <a href="invoices.html" class="nav-link"><i class="fas fa-file-invoice"></i><span>Invoices</span></a>
+        <a href="customers.html" class="nav-link"><i class="fas fa-users"></i><span>Customers</span></a>
+        <a href="suppliers.html" class="nav-link"><i class="fas fa-truck"></i><span>Suppliers</span></a>
+        <span class="nav-title">FINANCE</span>
+        <a href="income-expense.html" class="nav-link"><i class="fas fa-chart-line"></i><span>Income & Expense</span></a>
+        <a href="reports.html" class="nav-link"><i class="fas fa-chart-column"></i><span>Reports</span></a>
+    </nav>
+    <div class="sidebar-bottom">
+        <a href="#" class="nav-link"><i class="fas fa-gear"></i><span>Settings</span></a>
+        <div class="sidebar-user"><div class="user-avatar">SP</div><div class="user-info"><strong>Admin User</strong><span>Administrator</span></div></div>
+    </div>
+</aside>
+
+<header class="topbar">
+    <div class="topbar-left"><button class="menu-toggle" id="menuToggle"><i class="fas fa-bars"></i></button><div class="page-title"><span>Cash Management</span><strong>Cash Book Log</strong></div></div>
+    <div class="topbar-right">
+        <button class="topbar-btn" id="searchToggleBtn" title="Search (Ctrl + K)">
+            <i class="fas fa-search"></i>
+        </button>
+
+        <div class="notification-wrapper">
+            <button class="topbar-btn notification-btn" id="notificationBtn">
+                <i class="far fa-bell"></i>
+                <span class="notification-dot" id="notificationDot"></span>
+            </button>
+
+            <div class="notification-dropdown" id="notificationDropdown">
+                <div class="dropdown-header">
+                    <h4>Notifications</h4>
+                    <button class="mark-read-btn" id="markReadBtn">Mark all as read</button>
+                </div>
+                <div class="notification-list">
+                    <div class="notification-item" data-id="1" data-link="invoices.html" data-title="Overdue Payment Alert" data-msg="Invoice #INV-1021 for Muhammad Store amounting to Rs. 32,000 is 7 days past due. Please review or issue a payment reminder." data-type="warning" data-time="10 minutes ago">
+                        <div class="notification-icon warning"><i class="fas fa-triangle-exclamation"></i></div>
+                        <div class="notification-content">
+                            <p><strong>Overdue Payment:</strong> Muhammad Store (INV-1021) is 7 days overdue.</p>
+                            <span>10 minutes ago</span>
+                        </div>
+                    </div>
+                    <div class="notification-item" data-id="2" data-link="receivable.html" data-title="Payment Received Confirmation" data-msg="Payment of Rs. 45,000 has been successfully received from Ahmed Traders for Invoice #INV-1025 and recorded in Cash Book." data-type="success" data-time="2 hours ago">
+                        <div class="notification-icon success"><i class="fas fa-circle-check"></i></div>
+                        <div class="notification-content">
+                            <p><strong>Payment Received:</strong> Rs. 45,000 received from Ahmed Traders.</p>
+                            <span>2 hours ago</span>
+                        </div>
+                    </div>
+                    <div class="notification-item" data-id="3" data-link="payable.html" data-title="New Vendor Bill Recorded" data-msg="New purchase bill #BILL-784 from Al-Noor Suppliers for Rs. 18,500 has been entered. Due date: 25 August 2026." data-type="info" data-time="Yesterday">
+                        <div class="notification-icon info"><i class="fas fa-file-invoice"></i></div>
+                        <div class="notification-content">
+                            <p><strong>New Bill Added:</strong> BILL-784 from Al-Noor Suppliers.</p>
+                            <span>Yesterday</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="topbar-profile-wrapper">
+            <div class="topbar-profile" id="profileDropdownBtn" style="cursor: pointer;">
+                <div class="profile-avatar">SP</div>
+                <div class="profile-info">
+                    <strong id="adminUserNameDisplay">Admin User</strong>
+                    <span>Administrator</span>
+                </div>
+                <i class="fas fa-chevron-down"></i>
+            </div>
+
+            <div class="profile-dropdown-menu" id="profileDropdownMenu">
+                <div class="profile-dropdown-header">
+                    <strong id="adminMenuName">Admin User</strong>
+                    <span>admin@accountex.com</span>
+                </div>
+                <div class="profile-menu-list">
+                    <div class="profile-menu-item" id="openProfileModalBtn">
+                        <i class="fas fa-user-gear"></i> Profile Settings
+                    </div>
+                    <div class="profile-menu-item" id="openActivityBtn">
+                        <i class="fas fa-list-check"></i> Activity Log
+                    </div>
+                    <div class="profile-menu-item logout" id="logoutBtn">
+                        <i class="fas fa-right-from-bracket"></i> Log Out
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</header>
+
+<main class="dashboard-main">
+    <section class="dashboard-header">
+        <div><span class="dashboard-label">DAILY CASH LOG</span><h1>Cash Book</h1><p>Real-time physical cash transactions and daily closing balances.</p></div>
+        <button class="add-transaction-btn" id="addTransactionBtn"><i class="fas fa-plus"></i>Add Cash Entry</button>
+    </section>
+    <section class="financial-cards">
+        <div class="financial-card"><div class="card-top"><div class="card-icon cash-icon"><i class="fas fa-vault"></i></div></div><p>Opening Cash Balance</p><h2>Rs. 250,000</h2><span class="card-footer">Start of day balance</span></div>
+        <div class="financial-card"><div class="card-top"><div class="card-icon receivable-icon"><i class="fas fa-arrow-down"></i></div></div><p>Today's Cash In</p><h2>Rs. 45,000</h2><span class="card-footer">Total receipts today</span></div>
+        <div class="financial-card"><div class="card-top"><div class="card-icon payable-icon"><i class="fas fa-arrow-up"></i></div></div><p>Today's Cash Out</p><h2>Rs. 18,600</h2><span class="card-footer">Total payments today</span></div>
+        <div class="financial-card"><div class="card-top"><div class="card-icon"><i class="fas fa-money-bill-wave"></i></div></div><p>Net Cash Available</p><h2>Rs. 276,400</h2><span class="card-footer">Current drawer cash</span></div>
+    </section>
+    <section class="transactions-card">
+        <div class="section-header"><div><span class="section-label">DAILY TRANSACTIONS</span><h2>Cash Register Transactions</h2></div></div>
+        <div class="transactions-table-wrapper">
+            <table class="transactions-table">
+                <thead><tr><th>Date</th><th>Particulars / Description</th><th>Category</th><th>Cash In (Rs.)</th><th>Cash Out (Rs.)</th><th>Running Balance (Rs.)</th></tr></thead>
+                <tbody>
+                    <tr>
+                        <td>17 Aug 2026</td>
+                        <td><div class="transaction-name"><div class="transaction-avatar"><i class="fas fa-cash-register"></i></div><div><strong>Counter Cash Sales</strong><span>Receipt #CS-402</span></div></div></td>
+                        <td><span class="category">Sales</span></td><td class="amount received">+ Rs. 45,000</td><td>-</td><td><strong>Rs. 276,400</strong></td>
+                    </tr>
+                </tbody>
+            </table>
+        </div>
+    </section>
+</main>
+
+<div class="modal-overlay" id="addTransactionModal">
+    <div class="modal-card">
+        <div class="modal-header"><h3>Add Cash Register Entry</h3><button class="modal-close-btn" id="closeModalBtn"><i class="fas fa-xmark"></i></button></div>
+        <form id="addTransactionForm">
+            <div class="modal-body">
+                <div class="form-grid">
+                    <div class="form-group"><label for="transParty">Particulars / Party</label><input type="text" id="transParty" class="form-control" placeholder="e.g. Counter Cash Sales" required></div>
+                    <div class="form-group"><label for="transType">Cash Flow Type</label><select id="transType" class="form-control" required><option value="income">Cash In (+)</option><option value="expense">Cash Out (-)</option></select></div>
+                    <div class="form-group"><label for="transCategory">Category</label><select id="transCategory" class="form-control" required><option value="Sales">Sales</option><option value="Petty Expense">Petty Expense</option></select></div>
+                    <div class="form-group"><label for="transAmount">Amount (Rs.)</label><input type="number" id="transAmount" class="form-control" placeholder="e.g. 5000" required></div>
+                    <div class="form-group"><label for="transDate">Date</label><input type="date" id="transDate" class="form-control" required></div>
+                    <div class="form-group"><label for="transStatus">Status</label><select id="transStatus" class="form-control" required><option value="paid">Confirmed</option></select></div>
+                    <div class="form-group full-width"><label for="transRef">Voucher / Receipt #</label><input type="text" id="transRef" class="form-control" placeholder="e.g. CS-403"></div>
+                </div>
+            </div>
+            <div class="modal-footer"><button type="button" class="btn-secondary" id="cancelModalBtn">Cancel</button><button type="submit" class="btn-primary">Save Cash Entry</button></div>
+        </form>
+    </div>
+</div>
+<!-- GLOBAL SEARCH MODAL -->
+<div class="search-modal-overlay" id="searchModalOverlay">
+    <div class="search-modal-card">
+        <div class="search-input-header">
+            <i class="fas fa-search"></i>
+            <input type="text" class="search-input-field" id="globalSearchInput" placeholder="Search transactions, invoices, pages, clients... (Press ESC to close)" autofocus>
+            <button class="modal-close-btn" id="closeSearchModalBtn"><i class="fas fa-xmark"></i></button>
+        </div>
+        <div class="search-results-area" id="searchResultsArea"></div>
+    </div>
+</div>
+
+<!-- ADMIN PROFILE SETTINGS MODAL -->
+<div class="modal-overlay" id="profileSettingsModal">
+    <div class="modal-card">
+        <div class="modal-header">
+            <h3>Admin Profile Settings</h3>
+            <button class="modal-close-btn" id="closeProfileModalBtn"><i class="fas fa-xmark"></i></button>
+        </div>
+        <form id="profileSettingsForm">
+            <div class="modal-body">
+                <div class="form-grid">
+                    <div class="form-group full-width">
+                        <label for="adminNameInput">Full Name</label>
+                        <input type="text" id="adminNameInput" class="form-control" value="Admin User" required>
+                    </div>
+                    <div class="form-group full-width">
+                        <label for="adminEmailInput">Email Address</label>
+                        <input type="email" id="adminEmailInput" class="form-control" value="admin@accountex.com" required>
+                    </div>
+                    <div class="form-group">
+                        <label for="adminRoleInput">Role</label>
+                        <input type="text" id="adminRoleInput" class="form-control" value="Administrator" readonly>
+                    </div>
+                    <div class="form-group">
+                        <label for="adminPhoneInput">Phone</label>
+                        <input type="text" id="adminPhoneInput" class="form-control" value="+92 300 9876543">
+                    </div>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn-secondary" id="cancelProfileModalBtn">Cancel</button>
+                <button type="submit" class="btn-primary">Save Changes</button>
+            </div>
+        </form>
+    </div>
+</div>
+
+<!-- NOTIFICATION DETAIL MODAL -->
+<div class="modal-overlay" id="notificationDetailModal">
+    <div class="modal-card">
+        <div class="modal-header">
+            <h3>Notification Details</h3>
+            <button class="modal-close-btn" id="closeNotifDetailModalBtn"><i class="fas fa-xmark"></i></button>
+        </div>
+        <div class="modal-body" style="padding: 24px; display: flex; gap: 16px; align-items: flex-start;">
+            <div id="notifModalIcon" class="notification-icon warning" style="width: 44px; height: 44px; font-size: 18px; flex-shrink: 0;">
+                <i class="fas fa-triangle-exclamation"></i>
+            </div>
+            <div>
+                <h4 id="notifModalTitle" style="margin: 0 0 4px; font-size: 15px; color: var(--text-dark); font-weight: 700;">Notification Alert</h4>
+                <span id="notifModalTime" style="font-size: 11px; color: var(--text-medium); display: block; margin-bottom: 12px;">10 minutes ago</span>
+                <p id="notifModalMsg" style="margin: 0; font-size: 13px; color: var(--text-dark); line-height: 1.5;">Detailed notification description will be loaded here.</p>
+            </div>
+        </div>
+        <div class="modal-footer">
+            <button type="button" class="btn-secondary" onclick="closeNotifDetailModal()">Close</button>
+            <a href="#" id="notifModalLinkBtn" class="btn-primary" style="text-decoration: none; display: inline-flex; align-items: center; gap: 6px;">
+                Open Related Section <i class="fas fa-arrow-right"></i>
+            </a>
+        </div>
+    </div>
+</div>
+
+<div class="toast-container" id="toastContainer"></div>
+<script src="../js/script.js"></script>
+</body>
+</html>
