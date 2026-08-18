@@ -1071,22 +1071,56 @@ body {
 }
 
 /* =========================================
-   RESPONSIVE
+   RESPONSIVE DESIGN — TABLET & MOBILE
 ========================================= */
 
-@media (max-width: 900px) {
+@media (max-width: 1100px) {
+    .financial-cards {
+        grid-template-columns: repeat(2, 1fr);
+    }
 
+    .dashboard-content-grid {
+        grid-template-columns: 1fr;
+    }
+}
+
+/* Primary Breakpoint: <= 786px (Tablet & Mobile) */
+@media screen and (max-width: 786px) {
+
+    /* 1. Sidebar & Page Container */
     .sidebar {
         transform: translateX(-100%);
-        transition: 0.3s ease;
+        transition: transform 0.3s ease;
+        z-index: 1100;
     }
 
     .sidebar.active {
         transform: translateX(0);
     }
 
+    .sidebar-overlay {
+        position: fixed;
+        top: 0;
+        left: 0;
+        width: 100vw;
+        height: 100vh;
+        background: rgba(17, 24, 39, 0.5);
+        backdrop-filter: blur(3px);
+        z-index: 1050;
+        opacity: 0;
+        visibility: hidden;
+        transition: all 0.3s ease;
+    }
+
+    .sidebar-overlay.active {
+        opacity: 1;
+        visibility: visible;
+    }
+
     .topbar {
         left: 0;
+        width: 100%;
+        padding: 0 15px;
     }
 
     .menu-toggle {
@@ -1097,15 +1131,187 @@ body {
 
     .dashboard-main {
         margin-left: 0;
+        width: 100%;
+        max-width: 100%;
+        padding: 20px 15px;
     }
 
+    /* 2. Topbar & Dashboard Header */
+    .page-title span {
+        font-size: 9px;
+    }
+
+    .page-title strong {
+        font-size: 13px;
+    }
+
+    .dashboard-header {
+        align-items: flex-start;
+        flex-direction: column;
+        gap: 14px;
+        margin-bottom: 24px;
+    }
+
+    .dashboard-header h1 {
+        font-size: 24px;
+    }
+
+    .dashboard-header p {
+        font-size: 13px;
+    }
+
+    .add-transaction-btn,
+    .btn-action-main {
+        width: 100%;
+        justify-content: center;
+    }
+
+    .section-header {
+        padding: 16px 18px;
+        flex-direction: column;
+        align-items: flex-start;
+        gap: 12px;
+    }
+
+    /* 3. Single-Column Grids */
+    .financial-cards,
+    .summary-grid,
+    .dashboard-content-grid,
+    .reports-grid,
+    .stats-grid,
+    .cards-grid,
+    .customer-grid,
+    .supplier-grid,
+    .invoice-summary-grid {
+        grid-template-columns: 1fr;
+        gap: 16px;
+    }
+
+    .financial-card,
+    .summary-card {
+        padding: 18px;
+    }
+
+    .financial-card h2 {
+        font-size: 20px;
+    }
+
+    .summary-card h3 {
+        font-size: 20px;
+    }
+
+    /* 4. Action Bars, Filter Bars & Controls */
+    .table-actions,
+    .filter-bar,
+    .action-bar,
+    .filters-row,
+    .filter-controls {
+        flex-direction: column;
+        align-items: stretch;
+        width: 100%;
+        gap: 10px;
+    }
+
+    .search-box,
+    .search-input,
+    .filter-select,
+    .action-bar input,
+    .action-bar select,
+    .filter-bar input,
+    .filter-bar select {
+        width: 100%;
+    }
+
+    /* 5. Tables & Horizontal Scrolling */
+    .transactions-table-wrapper,
+    .table-responsive,
+    .table-container {
+        width: 100%;
+        overflow-x: auto;
+        -webkit-overflow-scrolling: touch;
+        overscroll-behavior-x: contain;
+    }
+
+    .transactions-table,
+    .data-table {
+        min-width: 600px;
+        width: 100%;
+    }
+
+    .transactions-table th,
+    .transactions-table td {
+        padding: 10px 14px;
+        font-size: 12px;
+    }
+
+    /* 6. Modals & Forms */
+    .modal-card,
+    .search-modal-card {
+        width: 95%;
+        max-width: 95%;
+        max-height: 90vh;
+        overflow-y: auto;
+        box-sizing: border-box;
+        margin: 10px auto;
+    }
+
+    .modal-body {
+        padding: 18px;
+        max-height: 70vh;
+    }
+
+    .modal-header {
+        padding: 16px 18px;
+    }
+
+    .modal-footer {
+        padding: 14px 18px;
+        flex-direction: column-reverse;
+        gap: 8px;
+    }
+
+    .modal-footer button {
+        width: 100%;
+        justify-content: center;
+    }
+
+    .form-grid {
+        grid-template-columns: 1fr;
+        gap: 12px;
+    }
+
+    .form-group.full-width {
+        grid-column: span 1;
+    }
+
+    .form-control {
+        width: 100%;
+        font-size: 13px;
+    }
+
+    /* 7. Charts */
+    .chart-container {
+        height: 260px;
+        padding: 10px 14px 14px;
+    }
+
+    /* 8. Dropdowns & Viewport Fitting */
+    .notification-dropdown,
+    .profile-dropdown-menu {
+        right: 0;
+        max-width: calc(100vw - 30px);
+        width: 320px;
+    }
+
+    .search-modal-overlay {
+        padding-top: 40px;
+    }
 }
 
-
-@media (max-width: 600px) {
-
-    .topbar {
-        padding: 0 15px;
+/* Mobile Small Viewports (<= 480px) */
+@media screen and (max-width: 480px) {
+    .dashboard-main {
+        padding: 16px 12px;
     }
 
     .profile-info,
@@ -1117,15 +1323,16 @@ body {
         padding-left: 8px;
     }
 
-    .page-title strong {
-        font-size: 12px;
+    .notification-dropdown,
+    .profile-dropdown-menu {
+        right: -10px;
+        width: calc(100vw - 24px);
+        max-width: 300px;
     }
-
 }
 
-
-@media (max-width: 400px) {
-
+/* Smallest Viewports (<= 375px) */
+@media screen and (max-width: 375px) {
     .page-title {
         display: none;
     }
@@ -1134,104 +1341,9 @@ body {
         margin-left: auto;
     }
 
-}
-
-/* =========================================
-   RESPONSIVE — TABLET
-========================================= */
-
-@media (max-width: 1100px) {
-
-    .financial-cards {
-        grid-template-columns: repeat(2, 1fr);
+    .topbar {
+        padding: 0 10px;
     }
-
-    .dashboard-content-grid {
-        grid-template-columns: 1fr;
-    }
-
-}
-
-
-/* =========================================
-   RESPONSIVE — MOBILE
-========================================= */
-
-@media (max-width: 768px) {
-
-    .dashboard-main {
-        padding: 20px 15px;
-    }
-
-    .dashboard-header {
-        align-items: flex-start;
-        flex-direction: column;
-    }
-
-    .dashboard-header h1 {
-        font-size: 27px;
-    }
-
-    .add-transaction-btn {
-        width: 100%;
-        justify-content: center;
-    }
-
-    .financial-cards {
-        grid-template-columns: 1fr;
-    }
-
-    .summary-grid {
-        grid-template-columns: 1fr;
-    }
-
-    .financial-card h2 {
-        font-size: 21px;
-    }
-
-    .section-header {
-        padding: 19px;
-    }
-
-    .transactions-table th,
-    .transactions-table td {
-        padding-left: 18px;
-        padding-right: 18px;
-    }
-
-}
-
-
-/* =========================================
-   SMALL MOBILE
-========================================= */
-
-@media (max-width: 480px) {
-
-    .dashboard-main {
-        padding: 16px 12px;
-    }
-
-    .dashboard-header h1 {
-        font-size: 24px;
-    }
-
-    .dashboard-header p {
-        font-size: 12px;
-    }
-
-    .financial-card {
-        padding: 18px;
-    }
-
-    .summary-card {
-        padding: 18px;
-    }
-
-    .summary-card h3 {
-        font-size: 21px;
-    }
-
 }
 
 /* =========================================

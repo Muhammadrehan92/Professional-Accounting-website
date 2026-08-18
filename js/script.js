@@ -1,24 +1,71 @@
 // =========================================
-// SIDEBAR TOGGLE & NAVIGATION
+// SIDEBAR TOGGLE & MOBILE BACKDROP
 // =========================================
 
 const menuToggle = document.getElementById("menuToggle");
 const sidebar = document.getElementById("sidebar");
 
+// Ensure sidebar overlay backdrop exists dynamically
+let sidebarOverlay = document.getElementById("sidebarOverlay");
+if (!sidebarOverlay && sidebar) {
+    sidebarOverlay = document.createElement("div");
+    sidebarOverlay.id = "sidebarOverlay";
+    sidebarOverlay.className = "sidebar-overlay";
+    document.body.appendChild(sidebarOverlay);
+}
+
+function isMobileView() {
+    return window.matchMedia("(max-width: 786px)").matches;
+}
+
+function closeMobileSidebar() {
+    if (sidebar) {
+        sidebar.classList.remove("active");
+    }
+    if (sidebarOverlay) {
+        sidebarOverlay.classList.remove("active");
+    }
+}
+
 if (menuToggle && sidebar) {
-    menuToggle.addEventListener("click", () => {
-        sidebar.classList.toggle("active");
+    menuToggle.addEventListener("click", (e) => {
+        e.stopPropagation();
+        const isOpen = sidebar.classList.toggle("active");
+        if (sidebarOverlay && isMobileView()) {
+            sidebarOverlay.classList.toggle("active", isOpen);
+        }
+    });
+}
+
+if (sidebarOverlay) {
+    sidebarOverlay.addEventListener("click", () => {
+        closeMobileSidebar();
     });
 }
 
 const navLinks = document.querySelectorAll(".nav-link");
-
 navLinks.forEach(link => {
     link.addEventListener("click", () => {
-        if (window.innerWidth <= 900 && sidebar) {
-            sidebar.classList.remove("active");
+        if (isMobileView()) {
+            closeMobileSidebar();
         }
     });
+});
+
+// Close sidebar on click outside on mobile screens
+document.addEventListener("click", (e) => {
+    if (isMobileView() && sidebar && sidebar.classList.contains("active")) {
+        if (!sidebar.contains(e.target) && menuToggle && !menuToggle.contains(e.target)) {
+            closeMobileSidebar();
+        }
+    }
+});
+
+// Hide overlay if window is resized above 786px
+window.addEventListener("resize", () => {
+    if (!isMobileView()) {
+        if (sidebarOverlay) sidebarOverlay.classList.remove("active");
+    }
 });
 
 
