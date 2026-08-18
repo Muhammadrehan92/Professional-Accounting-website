@@ -1070,281 +1070,7 @@ body {
 
 }
 
-/* =========================================
-   RESPONSIVE DESIGN — TABLET & MOBILE
-========================================= */
 
-@media (max-width: 1100px) {
-    .financial-cards {
-        grid-template-columns: repeat(2, 1fr);
-    }
-
-    .dashboard-content-grid {
-        grid-template-columns: 1fr;
-    }
-}
-
-/* Primary Breakpoint: <= 786px (Tablet & Mobile) */
-@media screen and (max-width: 786px) {
-
-    /* 1. Sidebar & Page Container */
-    .sidebar {
-        transform: translateX(-100%);
-        transition: transform 0.3s ease;
-        z-index: 1100;
-    }
-
-    .sidebar.active {
-        transform: translateX(0);
-    }
-
-    .sidebar-overlay {
-        position: fixed;
-        top: 0;
-        left: 0;
-        width: 100vw;
-        height: 100vh;
-        background: rgba(17, 24, 39, 0.5);
-        backdrop-filter: blur(3px);
-        z-index: 1050;
-        opacity: 0;
-        visibility: hidden;
-        transition: all 0.3s ease;
-    }
-
-    .sidebar-overlay.active {
-        opacity: 1;
-        visibility: visible;
-    }
-
-    .topbar {
-        left: 0;
-        width: 100%;
-        padding: 0 15px;
-    }
-
-    .menu-toggle {
-        display: flex;
-        align-items: center;
-        justify-content: center;
-    }
-
-    .dashboard-main {
-        margin-left: 0;
-        width: 100%;
-        max-width: 100%;
-        padding: 20px 15px;
-    }
-
-    /* 2. Topbar & Dashboard Header */
-    .page-title span {
-        font-size: 9px;
-    }
-
-    .page-title strong {
-        font-size: 13px;
-    }
-
-    .dashboard-header {
-        align-items: flex-start;
-        flex-direction: column;
-        gap: 14px;
-        margin-bottom: 24px;
-    }
-
-    .dashboard-header h1 {
-        font-size: 24px;
-    }
-
-    .dashboard-header p {
-        font-size: 13px;
-    }
-
-    .add-transaction-btn,
-    .btn-action-main {
-        width: 100%;
-        justify-content: center;
-    }
-
-    .section-header {
-        padding: 16px 18px;
-        flex-direction: column;
-        align-items: flex-start;
-        gap: 12px;
-    }
-
-    /* 3. Single-Column Grids */
-    .financial-cards,
-    .summary-grid,
-    .dashboard-content-grid,
-    .reports-grid,
-    .stats-grid,
-    .cards-grid,
-    .customer-grid,
-    .supplier-grid,
-    .invoice-summary-grid {
-        grid-template-columns: 1fr;
-        gap: 16px;
-    }
-
-    .financial-card,
-    .summary-card {
-        padding: 18px;
-    }
-
-    .financial-card h2 {
-        font-size: 20px;
-    }
-
-    .summary-card h3 {
-        font-size: 20px;
-    }
-
-    /* 4. Action Bars, Filter Bars & Controls */
-    .table-actions,
-    .filter-bar,
-    .action-bar,
-    .filters-row,
-    .filter-controls {
-        flex-direction: column;
-        align-items: stretch;
-        width: 100%;
-        gap: 10px;
-    }
-
-    .search-box,
-    .search-input,
-    .filter-select,
-    .action-bar input,
-    .action-bar select,
-    .filter-bar input,
-    .filter-bar select {
-        width: 100%;
-    }
-
-    /* 5. Tables & Horizontal Scrolling */
-    .transactions-table-wrapper,
-    .table-responsive,
-    .table-container {
-        width: 100%;
-        overflow-x: auto;
-        -webkit-overflow-scrolling: touch;
-        overscroll-behavior-x: contain;
-    }
-
-    .transactions-table,
-    .data-table {
-        min-width: 600px;
-        width: 100%;
-    }
-
-    .transactions-table th,
-    .transactions-table td {
-        padding: 10px 14px;
-        font-size: 12px;
-    }
-
-    /* 6. Modals & Forms */
-    .modal-card,
-    .search-modal-card {
-        width: 95%;
-        max-width: 95%;
-        max-height: 90vh;
-        overflow-y: auto;
-        box-sizing: border-box;
-        margin: 10px auto;
-    }
-
-    .modal-body {
-        padding: 18px;
-        max-height: 70vh;
-    }
-
-    .modal-header {
-        padding: 16px 18px;
-    }
-
-    .modal-footer {
-        padding: 14px 18px;
-        flex-direction: column-reverse;
-        gap: 8px;
-    }
-
-    .modal-footer button {
-        width: 100%;
-        justify-content: center;
-    }
-
-    .form-grid {
-        grid-template-columns: 1fr;
-        gap: 12px;
-    }
-
-    .form-group.full-width {
-        grid-column: span 1;
-    }
-
-    .form-control {
-        width: 100%;
-        font-size: 13px;
-    }
-
-    /* 7. Charts */
-    .chart-container {
-        height: 260px;
-        padding: 10px 14px 14px;
-    }
-
-    /* 8. Dropdowns & Viewport Fitting */
-    .notification-dropdown,
-    .profile-dropdown-menu {
-        right: 0;
-        max-width: calc(100vw - 30px);
-        width: 320px;
-    }
-
-    .search-modal-overlay {
-        padding-top: 40px;
-    }
-}
-
-/* Mobile Small Viewports (<= 480px) */
-@media screen and (max-width: 480px) {
-    .dashboard-main {
-        padding: 16px 12px;
-    }
-
-    .profile-info,
-    .profile-arrow {
-        display: none;
-    }
-
-    .topbar-profile {
-        padding-left: 8px;
-    }
-
-    .notification-dropdown,
-    .profile-dropdown-menu {
-        right: -10px;
-        width: calc(100vw - 24px);
-        max-width: 300px;
-    }
-}
-
-/* Smallest Viewports (<= 375px) */
-@media screen and (max-width: 375px) {
-    .page-title {
-        display: none;
-    }
-
-    .topbar-right {
-        margin-left: auto;
-    }
-
-    .topbar {
-        padding: 0 10px;
-    }
-}
 
 /* =========================================
    MODAL DIALOG STYLES
@@ -1848,4 +1574,683 @@ body {
 .search-result-item span {
     font-size: 11px;
     color: var(--text-medium);
+}
+
+/* =========================================
+   THEME SWITCHER & DARK MODE STYLES
+========================================= */
+
+.theme-switch-container {
+    display: flex;
+    gap: 12px;
+    margin-top: 6px;
+}
+
+.theme-btn {
+    flex: 1;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 8px;
+    padding: 12px 16px;
+    border: 2px solid var(--border);
+    border-radius: 10px;
+    background: var(--white);
+    color: var(--text-dark);
+    font-family: inherit;
+    font-size: 13px;
+    font-weight: 600;
+    cursor: pointer;
+    transition: all 0.25s ease;
+}
+
+.theme-btn:hover {
+    border-color: var(--primary);
+}
+
+.theme-btn.active {
+    border-color: var(--primary);
+    background: #eff6ff;
+    color: var(--primary);
+    box-shadow: 0 4px 12px rgba(37, 99, 235, 0.15);
+}
+
+/* Dark Mode Theme Overrides */
+body.dark-mode {
+    --text-dark: #f3f4f6;
+    --text-medium: #9ca3af;
+    --text-light: #6b7280;
+
+    --bg-light: #0f172a;
+    --white: #1e293b;
+    --border: #334155;
+
+    --shadow: 0 8px 30px rgba(0, 0, 0, 0.35);
+    background-color: #0f172a;
+    color: #f3f4f6;
+}
+
+body.dark-mode .topbar {
+    background: #1e293b;
+    border-bottom-color: #334155;
+}
+
+body.dark-mode .topbar-btn {
+    background: #0f172a;
+    border-color: #334155;
+    color: #9ca3af;
+}
+
+body.dark-mode .topbar-btn:hover {
+    background: #334155;
+    color: #ffffff;
+}
+
+body.dark-mode .page-title strong {
+    color: #f3f4f6;
+}
+
+body.dark-mode .page-title span {
+    color: #9ca3af;
+}
+
+body.dark-mode .profile-info strong {
+    color: #ffffff !important;
+}
+
+body.dark-mode .profile-info span {
+    color: #94a3b8;
+}
+
+body.dark-mode .topbar-profile > i {
+    color: #94a3b8;
+}
+
+body.dark-mode .topbar-profile {
+    border-left-color: #334155;
+}
+
+body.dark-mode .dashboard-header h1,
+body.dark-mode .section-header h2,
+body.dark-mode .modal-header h3,
+body.dark-mode .financial-card h2,
+body.dark-mode .summary-card h3 {
+    color: #f8fafc;
+}
+
+body.dark-mode .financial-card,
+body.dark-mode .summary-card,
+body.dark-mode .transactions-card,
+body.dark-mode .quick-actions-card,
+body.dark-mode .financial-overview-card {
+    background: #1e293b;
+    border-color: #334155;
+}
+
+body.dark-mode .transactions-table th {
+    background: #0f172a;
+    color: #9ca3af;
+    border-top-color: #334155;
+    border-bottom-color: #334155;
+}
+
+body.dark-mode .transactions-table td {
+    border-bottom-color: #334155;
+    color: #cbd5e1;
+}
+
+body.dark-mode .transactions-table tbody tr:hover {
+    background: #0f172a;
+}
+
+body.dark-mode .category {
+    background: #334155;
+    color: #cbd5e1;
+}
+
+body.dark-mode .quick-action {
+    border-bottom-color: #334155;
+}
+
+body.dark-mode .quick-action:hover {
+    background: rgba(255, 255, 255, 0.03);
+}
+
+body.dark-mode .modal-card,
+body.dark-mode .search-modal-card {
+    background: #1e293b;
+    color: #f3f4f6;
+}
+
+body.dark-mode .modal-header,
+body.dark-mode .modal-footer,
+body.dark-mode .search-input-header {
+    border-color: #334155;
+}
+
+body.dark-mode .modal-footer {
+    background: #0f172a;
+}
+
+body.dark-mode .form-control,
+body.dark-mode .search-input-field {
+    background: #0f172a;
+    border-color: #334155;
+    color: #f3f4f6;
+}
+
+body.dark-mode .form-group label {
+    color: #cbd5e1;
+}
+
+body.dark-mode .notification-dropdown,
+body.dark-mode .profile-dropdown-menu {
+    background: #1e293b;
+    border-color: #334155;
+}
+
+body.dark-mode .profile-dropdown-header {
+    background: #0f172a;
+    border-bottom-color: #334155;
+}
+
+body.dark-mode .profile-menu-item {
+    color: #f3f4f6;
+}
+
+body.dark-mode .profile-menu-item:hover {
+    background: #334155;
+}
+
+body.dark-mode .notification-item {
+    border-bottom-color: #334155;
+}
+
+body.dark-mode .notification-item:hover {
+    background: #0f172a;
+}
+
+body.dark-mode .btn-secondary {
+    background: #0f172a;
+    border-color: #334155;
+    color: #f3f4f6;
+}
+
+body.dark-mode .btn-secondary:hover {
+    background: #334155;
+}
+
+body.dark-mode .chart-filter {
+    background: #0f172a;
+    border-color: #334155;
+    color: #9ca3af;
+}
+
+body.dark-mode .theme-btn {
+    background: #0f172a;
+    border-color: #334155;
+    color: #f3f4f6;
+}
+
+body.dark-mode .theme-btn.active {
+    border-color: var(--primary);
+    background: #1d4ed8;
+    color: #ffffff;
+}
+
+/* =========================================
+   ACTIVITY LOG STYLES
+========================================= */
+
+.activity-timeline {
+    display: flex;
+    flex-direction: column;
+    gap: 16px;
+}
+
+.activity-item {
+    display: flex;
+    align-items: flex-start;
+    gap: 14px;
+    padding-bottom: 14px;
+    border-bottom: 1px solid var(--border);
+}
+
+.activity-item:last-child {
+    border-bottom: none;
+    padding-bottom: 0;
+}
+
+.activity-icon {
+    width: 36px;
+    height: 36px;
+    border-radius: 10px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 14px;
+    flex-shrink: 0;
+}
+
+.activity-icon.success {
+    background: #ecfdf5;
+    color: var(--success);
+}
+
+.activity-icon.info {
+    background: #eff6ff;
+    color: var(--primary);
+}
+
+.activity-icon.warning {
+    background: #fff7ed;
+    color: var(--warning);
+}
+
+.activity-icon.primary {
+    background: #f0f9ff;
+    color: #0284c7;
+}
+
+.activity-details strong {
+    display: block;
+    font-size: 13px;
+    color: var(--text-dark);
+}
+
+.activity-details p {
+    margin: 3px 0 0;
+    font-size: 12px;
+    color: var(--text-medium);
+    line-height: 1.4;
+}
+
+.activity-details span {
+    display: block;
+    margin-top: 4px;
+    font-size: 10px;
+    color: var(--text-light);
+}
+
+/* Dark Mode Overrides for Activity Log */
+body.dark-mode .activity-item {
+    border-bottom-color: #334155;
+}
+
+body.dark-mode .activity-icon.success {
+    background: #064e3b;
+    color: #34d399;
+}
+
+body.dark-mode .activity-icon.info {
+    background: #1e3a8a;
+    color: #60a5fa;
+}
+
+body.dark-mode .activity-icon.warning {
+    background: #78350f;
+    color: #fbbf24;
+}
+
+body.dark-mode .activity-icon.primary {
+    background: #075985;
+    color: #38bdf8;
+}
+
+body.dark-mode .activity-details strong {
+    color: #f8fafc;
+}
+
+body.dark-mode .activity-details p {
+    color: #94a3b8;
+}
+
+/* =========================================
+   RESPONSIVE DESIGN — TABLET & MOBILE
+========================================= */
+
+@media (max-width: 1100px) {
+    .financial-cards {
+        grid-template-columns: repeat(2, 1fr);
+    }
+
+    .dashboard-content-grid {
+        grid-template-columns: 1fr;
+    }
+}
+
+/* Primary Breakpoint: <= 786px (Tablet & Mobile) */
+@media screen and (max-width: 786px) {
+
+    /* 1. Sidebar & Page Container */
+    .sidebar {
+        transform: translateX(-100%);
+        transition: transform 0.3s ease;
+        z-index: 1100;
+    }
+
+    .sidebar.active {
+        transform: translateX(0);
+    }
+
+    .sidebar-overlay {
+        position: fixed;
+        top: 0;
+        left: 0;
+        width: 100vw;
+        height: 100vh;
+        background: rgba(17, 24, 39, 0.5);
+        backdrop-filter: blur(3px);
+        z-index: 1050;
+        opacity: 0;
+        visibility: hidden;
+        transition: all 0.3s ease;
+    }
+
+    .sidebar-overlay.active {
+        opacity: 1;
+        visibility: visible;
+    }
+
+    .topbar {
+        left: 0;
+        width: 100%;
+        padding: 0 15px;
+    }
+
+    .menu-toggle {
+        display: flex;
+        align-items: center;
+        justify-content: center;
+    }
+
+    .dashboard-main {
+        margin-left: 0;
+        width: 100%;
+        max-width: 100%;
+        padding: 98px 15px 25px;
+    }
+
+    /* 2. Topbar & Dashboard Header */
+    .page-title span {
+        font-size: 9px;
+    }
+
+    .page-title strong {
+        font-size: 13px;
+    }
+
+    .dashboard-header {
+        align-items: flex-start;
+        flex-direction: column;
+        gap: 14px;
+        margin-bottom: 24px;
+    }
+
+    .dashboard-header h1 {
+        font-size: 24px;
+    }
+
+    .dashboard-header p {
+        font-size: 13px;
+        line-height: 1.5;
+    }
+
+    .add-transaction-btn,
+    .btn-action-main {
+        width: 100%;
+        justify-content: center;
+    }
+
+    .section-header {
+        padding: 16px 18px;
+        flex-direction: column;
+        align-items: flex-start;
+        gap: 12px;
+    }
+
+    /* 3. Single-Column Grids */
+    .financial-cards,
+    .summary-grid,
+    .dashboard-content-grid,
+    .reports-grid,
+    .stats-grid,
+    .cards-grid,
+    .customer-grid,
+    .supplier-grid,
+    .invoice-summary-grid {
+        grid-template-columns: 1fr;
+        gap: 16px;
+    }
+
+    .financial-card,
+    .summary-card {
+        padding: 18px;
+    }
+
+    .financial-card h2 {
+        font-size: 20px;
+    }
+
+    .summary-card h3 {
+        font-size: 20px;
+    }
+
+    /* 4. Action Bars, Filter Bars & Controls */
+    .table-actions,
+    .filter-bar,
+    .action-bar,
+    .filters-row,
+    .filter-controls {
+        flex-direction: column;
+        align-items: stretch;
+        width: 100%;
+        gap: 10px;
+    }
+
+    .search-box,
+    .search-input,
+    .filter-select,
+    .action-bar input,
+    .action-bar select,
+    .filter-bar input,
+    .filter-bar select {
+        width: 100%;
+    }
+
+    /* 5. Tables & Horizontal Scrolling */
+    .transactions-table-wrapper,
+    .table-responsive,
+    .table-container {
+        width: 100%;
+        overflow-x: auto;
+        -webkit-overflow-scrolling: touch;
+        overscroll-behavior-x: contain;
+    }
+
+    .transactions-table,
+    .data-table {
+        min-width: 600px;
+        width: 100%;
+    }
+
+    .transactions-table th,
+    .transactions-table td {
+        padding: 10px 14px;
+        font-size: 12px;
+    }
+
+    /* 6. Modals & Forms */
+    .modal-card,
+    .search-modal-card {
+        width: 95%;
+        max-width: 95%;
+        max-height: 90vh;
+        overflow-y: auto;
+        box-sizing: border-box;
+        margin: 10px auto;
+    }
+
+    .modal-body {
+        padding: 18px;
+        max-height: 70vh;
+    }
+
+    .modal-header {
+        padding: 16px 18px;
+    }
+
+    .modal-footer {
+        padding: 14px 18px;
+        flex-direction: column-reverse;
+        gap: 8px;
+    }
+
+    .modal-footer button {
+        width: 100%;
+        justify-content: center;
+    }
+
+    .form-grid {
+        grid-template-columns: 1fr;
+        gap: 12px;
+    }
+
+    .form-group.full-width {
+        grid-column: span 1;
+    }
+
+    .form-control {
+        width: 100%;
+        font-size: 13px;
+    }
+
+    /* 7. Charts */
+    .chart-container {
+        height: 260px;
+        padding: 10px 14px 14px;
+    }
+
+    /* 8. Dropdowns & Viewport Fitting */
+    .notification-dropdown {
+        position: fixed !important;
+        top: 74px !important;
+        right: 15px !important;
+        left: 15px !important;
+        width: auto !important;
+        max-width: 350px !important;
+        margin-left: auto !important;
+        box-shadow: 0 15px 35px rgba(15, 23, 42, 0.2);
+        z-index: 2500 !important;
+    }
+
+    .profile-dropdown-menu {
+        position: fixed !important;
+        top: 74px !important;
+        right: 15px !important;
+        width: 230px !important;
+        max-width: calc(100vw - 30px) !important;
+        box-shadow: 0 15px 35px rgba(15, 23, 42, 0.2);
+        z-index: 2500 !important;
+    }
+
+    .search-modal-overlay {
+        padding-top: 40px;
+    }
+
+    .toast-container {
+        bottom: 16px;
+        right: 16px;
+        left: 16px;
+        max-width: calc(100vw - 32px);
+    }
+}
+
+/* Mobile Small Viewports (<= 480px) */
+@media screen and (max-width: 480px) {
+    .page-title {
+        display: none !important;
+    }
+
+    .topbar-left {
+        gap: 6px;
+    }
+
+    .topbar-right {
+        gap: 6px;
+        margin-left: auto;
+    }
+
+    .topbar {
+        padding: 0 10px;
+    }
+
+    .menu-toggle,
+    .topbar-btn {
+        width: 35px;
+        height: 35px;
+        flex-shrink: 0;
+    }
+
+    .dashboard-main {
+        padding: 92px 12px 20px;
+    }
+
+    .profile-info {
+        display: flex !important;
+        flex-direction: column;
+    }
+
+    .profile-info strong {
+        font-size: 11px;
+        max-width: 95px;
+        overflow: hidden;
+        text-overflow: ellipsis;
+        white-space: nowrap;
+    }
+
+    .profile-info span {
+        display: none;
+    }
+
+    .topbar-profile > i {
+        display: inline-block !important;
+        font-size: 10px;
+    }
+
+    .topbar-profile {
+        padding-left: 6px;
+        gap: 5px;
+    }
+
+    .notification-dropdown {
+        position: fixed !important;
+        top: 72px !important;
+        right: 12px !important;
+        left: 12px !important;
+        width: auto !important;
+        max-width: calc(100vw - 24px) !important;
+        margin-left: auto !important;
+        z-index: 2500 !important;
+    }
+
+    .profile-dropdown-menu {
+        position: fixed !important;
+        top: 72px !important;
+        right: 12px !important;
+        width: 230px !important;
+        max-width: calc(100vw - 24px) !important;
+        z-index: 2500 !important;
+    }
+}
+
+/* Smallest Viewports (<= 375px) */
+@media screen and (max-width: 375px) {
+    .profile-info strong {
+        max-width: 80px;
+    }
+
+    .topbar {
+        padding: 0 8px;
+    }
 }

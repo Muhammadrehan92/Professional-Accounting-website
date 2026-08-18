@@ -325,12 +325,93 @@ document.addEventListener("click", () => {
 
 
 // =========================================
-// ADMIN PROFILE SETTINGS MODAL
+// ADMIN PROFILE PERSISTENCE (LOCALSTORAGE)
 // =========================================
+
+function loadSavedProfile() {
+    let saved = localStorage.getItem("accountexProfile");
+    if (!saved) {
+        const defaultProfile = { name: "Muhammad Rehan", email: "rehan@accountex.com", phone: "+92 300 9876543" };
+        localStorage.setItem("accountexProfile", JSON.stringify(defaultProfile));
+        saved = JSON.stringify(defaultProfile);
+    }
+    try {
+        const data = JSON.parse(saved);
+        if (data.name) {
+            document.querySelectorAll("#adminUserNameDisplay, #adminMenuName, .profile-info strong, .sidebar-user strong").forEach(el => {
+                el.textContent = data.name;
+            });
+            const initials = data.name.split(" ").map(n => n[0]).filter(Boolean).join("").toUpperCase().substring(0, 2);
+            document.querySelectorAll(".profile-avatar, .user-avatar").forEach(el => {
+                el.textContent = initials || "MR";
+            });
+            const nameInput = document.getElementById("adminNameInput");
+            if (nameInput) nameInput.value = data.name;
+        }
+        if (data.email) {
+            const emailSpan = document.querySelector(".profile-dropdown-header span");
+            if (emailSpan) emailSpan.textContent = data.email;
+            const emailInput = document.getElementById("adminEmailInput");
+            if (emailInput) emailInput.value = data.email;
+        }
+        if (data.phone) {
+            const phoneInput = document.getElementById("adminPhoneInput");
+            if (phoneInput) phoneInput.value = data.phone;
+        }
+    } catch (e) {
+        console.error("Error loading saved profile", e);
+    }
+}
+
+if (document.readyState === "loading") {
+    document.addEventListener("DOMContentLoaded", loadSavedProfile);
+} else {
+    loadSavedProfile();
+}
+
+// =========================================
+// THEME SWITCHER (LIGHT / DARK MODE)
+// =========================================
+
+function applyTheme(theme) {
+    if (theme === "dark") {
+        document.body.classList.add("dark-mode");
+        document.documentElement.classList.add("dark-mode");
+    } else {
+        document.body.classList.remove("dark-mode");
+        document.documentElement.classList.remove("dark-mode");
+    }
+
+    const lightBtn = document.getElementById("lightThemeBtn");
+    const darkBtn = document.getElementById("darkThemeBtn");
+
+    if (lightBtn && darkBtn) {
+        if (theme === "dark") {
+            darkBtn.classList.add("active");
+            lightBtn.classList.remove("active");
+        } else {
+            lightBtn.classList.add("active");
+            darkBtn.classList.remove("active");
+        }
+    }
+}
+
+function initTheme() {
+    const savedTheme = localStorage.getItem("accountexTheme") || "light";
+    applyTheme(savedTheme);
+}
+
+if (document.readyState === "loading") {
+    document.addEventListener("DOMContentLoaded", initTheme);
+} else {
+    initTheme();
+}
 
 function openProfileModal() {
     if (profileSettingsModal) {
         if (profileDropdownMenu) profileDropdownMenu.classList.remove("active");
+        loadSavedProfile();
+        initTheme();
         profileSettingsModal.classList.add("active");
     }
 }
@@ -351,23 +432,213 @@ if (profileSettingsModal) {
     });
 }
 
+// =========================================
+// DYNAMIC ACTIVITY LOGGING SYSTEM (PER USER ID)
+// =========================================
+
+function getActiveUserName() {
+    try {
+        const saved = localStorage.getItem("accountexProfile");
+        if (saved) {
+            const data = JSON.parse(saved);
+            if (data.name) return data.name;
+        }
+    } catch (e) {}
+    return "Muhammad Rehan";
+}
+
+function getDefaultActivities(userName) {
+    return [
+        {
+            type: "success",
+            icon: "fa-circle-check",
+            title: "Payment Received Confirmation",
+            desc: `${userName} recorded payment of Rs. 45,000 received from Ahmed Traders for Invoice #INV-1025.`,
+            time: "Today, 2:30 PM"
+        },
+        {
+            type: "info",
+            icon: "fa-user-gear",
+            title: "Profile Settings Updated",
+            desc: `User ID "${userName}" updated account profile details.`,
+            time: "Today, 11:15 AM"
+        },
+        {
+            type: "warning",
+            icon: "fa-file-invoice",
+            title: "Vendor Bill Recorded",
+            desc: `${userName} entered purchase bill #BILL-784 for Rs. 18,500 from Al-Noor Suppliers.`,
+            time: "Yesterday, 5:40 PM"
+        },
+        {
+            type: "info",
+            icon: "fa-sliders",
+            title: "Theme Preference Updated",
+            desc: `${userName} updated system UI theme preferences.`,
+            time: "Yesterday, 3:20 PM"
+        },
+        {
+            type: "primary",
+            icon: "fa-print",
+            title: "Report Exported",
+            desc: `${userName} generated and exported Executive Financial Summary Report.`,
+            time: "16 Aug 2026, 10:00 AM"
+        }
+    ];
+}
+
+function renderActivityLogs() {
+    const timeline = document.getElementById("activityTimeline");
+    if (!timeline) return;
+
+    const userName = getActiveUserName();
+    let activities = [];
+
+    try {
+        const saved = localStorage.getItem("accountexActivities");
+        if (saved) {
+            activities = JSON.parse(saved);
+        } else {
+            activities = getDefaultActivities(userName);
+        }
+    } catch (e) {
+        activities = getDefaultActivities(userName);
+    }
+
+    if (!activities || activities.length === 0) {
+        timeline.innerHTML = `<div style="padding: 24px; text-align: center; color: var(--text-medium); font-size: 13px;">No activity logs recorded for active user <strong>${userName}</strong>.</div>`;
+        return;
+    }
+
+    let html = "";
+    activities.forEach(item => {
+        html += `
+        <div class="activity-item">
+            <div class="activity-icon ${item.type}"><i class="fas ${item.icon}"></i></div>
+            <div class="activity-details">
+                <strong>${item.title}</strong>
+                <p>${item.desc}</p>
+                <span>${item.time}</span>
+            </div>
+        </div>
+        `;
+    });
+
+    timeline.innerHTML = html;
+}
+
+function addActivityLog(title, desc, type = "info", icon = "fa-circle-info") {
+    const userName = getActiveUserName();
+    const newActivity = {
+        type: type,
+        icon: icon,
+        title: title,
+        desc: `${userName}: ${desc}`,
+        time: "Just now"
+    };
+
+    let activities = [];
+    try {
+        const saved = localStorage.getItem("accountexActivities");
+        if (saved) {
+            activities = JSON.parse(saved);
+        } else {
+            activities = getDefaultActivities(userName);
+        }
+    } catch (e) {
+        activities = getDefaultActivities(userName);
+    }
+
+    activities.unshift(newActivity);
+    localStorage.setItem("accountexActivities", JSON.stringify(activities));
+    renderActivityLogs();
+}
+
+function openActivityModal() {
+    if (profileDropdownMenu) profileDropdownMenu.classList.remove("active");
+    renderActivityLogs();
+    const modal = document.getElementById("activityLogModal");
+    if (modal) {
+        modal.classList.add("active");
+    }
+}
+
+function closeActivityModal() {
+    const modal = document.getElementById("activityLogModal");
+    if (modal) {
+        modal.classList.remove("active");
+    }
+}
+
+// Global Delegated Listener for Theme Switch, Activity Log & Settings Triggers
+document.addEventListener("click", (e) => {
+    const lightBtn = e.target.closest("#lightThemeBtn");
+    if (lightBtn) {
+        localStorage.setItem("accountexTheme", "light");
+        applyTheme("light");
+        addActivityLog("Theme Changed", "Switched interface mode to Light Mode.", "info", "fa-sun");
+        showToast("Switched to Light Mode", "info");
+        return;
+    }
+
+    const darkBtn = e.target.closest("#darkThemeBtn");
+    if (darkBtn) {
+        localStorage.setItem("accountexTheme", "dark");
+        applyTheme("dark");
+        addActivityLog("Theme Changed", "Switched interface mode to Dark Mode.", "info", "fa-moon");
+        showToast("Switched to Dark Mode", "info");
+        return;
+    }
+
+    const activityBtn = e.target.closest("#openActivityBtn");
+    if (activityBtn) {
+        e.preventDefault();
+        openActivityModal();
+        return;
+    }
+
+    const closeActBtn = e.target.closest("#closeActivityModalBtn, #closeActivityModalFooterBtn");
+    if (closeActBtn) {
+        closeActivityModal();
+        return;
+    }
+
+    const clearActBtn = e.target.closest("#clearActivityLogBtn");
+    if (clearActBtn) {
+        localStorage.setItem("accountexActivities", JSON.stringify([]));
+        renderActivityLogs();
+        showToast("Activity log cleared", "info");
+        return;
+    }
+
+    const settingsBtn = e.target.closest("#openSettingsBtn, .sidebar-bottom a");
+    if (settingsBtn && settingsBtn.textContent.includes("Settings")) {
+        e.preventDefault();
+        openProfileModal();
+        return;
+    }
+
+    const actModal = document.getElementById("activityLogModal");
+    if (actModal && e.target === actModal) {
+        closeActivityModal();
+    }
+});
+
 if (profileSettingsForm) {
     profileSettingsForm.addEventListener("submit", (e) => {
         e.preventDefault();
-        const newName = document.getElementById("adminNameInput").value.trim();
+        const newName = document.getElementById("adminNameInput")?.value.trim() || "";
+        const newEmail = document.getElementById("adminEmailInput")?.value.trim() || "";
+        const newPhone = document.getElementById("adminPhoneInput")?.value.trim() || "";
 
         if (newName) {
-            document.querySelectorAll("#adminUserNameDisplay, #adminMenuName, .profile-info strong, .sidebar-user strong").forEach(el => {
-                el.textContent = newName;
-            });
+            const profileObj = { name: newName, email: newEmail, phone: newPhone };
+            localStorage.setItem("accountexProfile", JSON.stringify(profileObj));
 
-            const initials = newName.split(" ").map(n => n[0]).join("").toUpperCase().substring(0, 2);
-            document.querySelectorAll(".profile-avatar, .user-avatar").forEach(el => {
-                el.textContent = initials || "AD";
-            });
-
+            loadSavedProfile();
+            addActivityLog("Profile Details Updated", `Updated account details for user ID "${newName}".`, "info", "fa-user-gear");
             closeProfileModal();
-            showToast("Admin profile updated successfully!", "success");
+            showToast("System & profile settings saved!", "success");
         }
     });
 }
