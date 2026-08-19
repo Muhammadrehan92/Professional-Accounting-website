@@ -113,7 +113,7 @@
 <main class="dashboard-main">
     <section class="dashboard-header">
         <div><span class="dashboard-label">DAILY CASH LOG</span><h1>Cash Book</h1><p>Real-time physical cash transactions and daily closing balances.</p></div>
-        <button class="add-transaction-btn" id="addTransactionBtn"><i class="fas fa-plus"></i>Add Cash Entry</button>
+        <button class="add-transaction-btn" id="addTransactionBtn" onclick="openModal()"><i class="fas fa-plus"></i>Add Cash Entry</button>
     </section>
     <section class="financial-cards">
         <div class="financial-card"><div class="card-top"><div class="card-icon cash-icon"><i class="fas fa-vault"></i></div></div><p>Opening Cash Balance</p><h2>Rs. 250,000</h2><span class="card-footer">Start of day balance</span></div>
@@ -150,7 +150,20 @@
                     <div class="form-group"><label for="transAmount">Amount (Rs.)</label><input type="number" id="transAmount" class="form-control" placeholder="e.g. 5000" required></div>
                     <div class="form-group"><label for="transDate">Date</label><input type="date" id="transDate" class="form-control" required></div>
                     <div class="form-group"><label for="transStatus">Status</label><select id="transStatus" class="form-control" required><option value="paid">Confirmed</option></select></div>
-                    <div class="form-group full-width"><label for="transRef">Voucher / Receipt #</label><input type="text" id="transRef" class="form-control" placeholder="e.g. CS-403"></div>
+                    <div class="form-group full-width">
+                        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 6px;">
+                            <label for="transRef" style="margin: 0; font-weight: 600;">Voucher / Receipt #</label>
+                            <span style="font-size: 11px; color: var(--success); font-weight: 600; display: inline-flex; align-items: center; gap: 4px;">
+                                <i class="fas fa-wand-magic-sparkles"></i> Auto Generated
+                            </span>
+                        </div>
+                        <div class="input-with-icon" style="position: relative;">
+                            <input type="text" id="transRef" class="form-control" placeholder="e.g. CS-404" style="padding-right: 38px; font-weight: 600; color: var(--primary);">
+                            <button type="button" class="toggle-password-btn regenerate-ref-btn" title="Generate New Number" style="color: var(--primary);">
+                                <i class="fas fa-arrows-rotate"></i>
+                            </button>
+                        </div>
+                    </div>
                 </div>
             </div>
             <div class="modal-footer"><button type="button" class="btn-secondary" id="cancelModalBtn">Cancel</button><button type="submit" class="btn-primary">Save Cash Entry</button></div>
@@ -176,16 +189,25 @@
             <h3>System & Profile Settings</h3>
             <button class="modal-close-btn" id="closeProfileModalBtn"><i class="fas fa-xmark"></i></button>
         </div>
-        <form id="profileSettingsForm">
+        <form id="profileSettingsForm" novalidate>
             <div class="modal-body">
                 <div class="form-grid">
                     <div class="form-group full-width">
-                        <label for="adminNameInput">Full Name</label>
-                        <input type="text" id="adminNameInput" class="form-control" value="Admin User" required>
+                        <label for="adminNameInput">User ID / Full Name</label>
+                        <input type="text" id="adminNameInput" class="form-control" value="Muhammad Rehan" required>
+                        <div class="invalid-feedback"><i class="fas fa-circle-exclamation"></i> Invalid User ID / Name</div>
+                    </div>
+                    <div class="form-group full-width">
+                        <label for="adminPasswordInput">Password</label>
+                        <div class="password-input-wrapper">
+                            <input type="password" id="adminPasswordInput" class="form-control" value="admin123" required>
+                            <button type="button" class="toggle-password-btn" title="Show/Hide Password"><i class="fas fa-eye"></i></button>
+                        </div>
+                        <div class="invalid-feedback"><i class="fas fa-circle-exclamation"></i> Invalid Password</div>
                     </div>
                     <div class="form-group full-width">
                         <label for="adminEmailInput">Email Address</label>
-                        <input type="email" id="adminEmailInput" class="form-control" value="admin@accountex.com" required>
+                        <input type="email" id="adminEmailInput" class="form-control" value="rehan@accountex.com" required>
                     </div>
                     <div class="form-group">
                         <label for="adminRoleInput">Role</label>
@@ -212,7 +234,7 @@
             </div>
             <div class="modal-footer">
                 <button type="button" class="btn-secondary" id="cancelProfileModalBtn">Cancel</button>
-                <button type="submit" class="btn-primary">Save Changes</button>
+                <button type="submit" class="btn-primary" onclick="closeProfileModal()">Save Changes</button>
             </div>
         </form>
     </div>
@@ -270,7 +292,7 @@
             </div>
         </div>
         <div class="modal-footer">
-            <button type="button" class="btn-secondary" id="clearActivityLogBtn"><i class="fas fa-trash-can" style="margin-right: 6px;"></i> Clear Log</button>
+            <button type="button" class="btn-secondary" id="clearActivityLogBtn" onclick="clearActivityLog()"><i class="fas fa-trash-can" style="margin-right: 6px;"></i> Clear Log</button>
             <button type="button" class="btn-primary" id="closeActivityModalFooterBtn">Close</button>
         </div>
     </div>

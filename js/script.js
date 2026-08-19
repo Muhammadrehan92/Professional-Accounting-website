@@ -237,29 +237,46 @@ if (profileDropdownBtn && profileDropdownMenu) {
 
 // Open Search Modal
 function openSearchModal() {
-    if (searchModalOverlay) {
-        if (notificationDropdown) notificationDropdown.classList.remove("active");
-        if (profileDropdownMenu) profileDropdownMenu.classList.remove("active");
-        searchModalOverlay.classList.add("active");
-        setTimeout(() => globalSearchInput && globalSearchInput.focus(), 100);
+    const modal = document.getElementById("searchModalOverlay");
+    const notifDrop = document.getElementById("notificationDropdown");
+    const profMenu = document.getElementById("profileDropdownMenu");
+    const input = document.getElementById("globalSearchInput");
+
+    if (notifDrop) notifDrop.classList.remove("active");
+    if (profMenu) profMenu.classList.remove("active");
+
+    if (modal) {
+        modal.classList.add("active");
+        setTimeout(() => input && input.focus(), 100);
         renderSearchResults("");
     }
 }
 
 function closeSearchModal() {
-    if (searchModalOverlay) {
-        searchModalOverlay.classList.remove("active");
+    const modal = document.getElementById("searchModalOverlay");
+    if (modal) {
+        modal.classList.remove("active");
     }
 }
 
-if (searchToggleBtn) searchToggleBtn.addEventListener("click", openSearchModal);
-if (closeSearchModalBtn) closeSearchModalBtn.addEventListener("click", closeSearchModal);
-
-if (searchModalOverlay) {
-    searchModalOverlay.addEventListener("click", (e) => {
-        if (e.target === searchModalOverlay) closeSearchModal();
-    });
-}
+document.addEventListener("click", (e) => {
+    const srchBtn = e.target.closest("#searchToggleBtn, .search-toggle-btn");
+    if (srchBtn) {
+        e.preventDefault();
+        openSearchModal();
+        return;
+    }
+    const closeSrch = e.target.closest("#closeSearchModalBtn");
+    if (closeSrch) {
+        e.preventDefault();
+        closeSearchModal();
+        return;
+    }
+    const modal = document.getElementById("searchModalOverlay");
+    if (modal && e.target === modal) {
+        closeSearchModal();
+    }
+});
 
 // Global Keyboard Shortcut (Ctrl+K or Cmd+K)
 document.addEventListener("keydown", (e) => {
@@ -317,26 +334,156 @@ function renderSearchResults(query) {
     searchResultsArea.innerHTML = html;
 }
 
-// Close Dropdowns on Click Outside
-document.addEventListener("click", () => {
-    if (notificationDropdown) notificationDropdown.classList.remove("active");
-    if (profileDropdownMenu) profileDropdownMenu.classList.remove("active");
+// Delegated Handler for Dropdowns, Options & Modals
+document.addEventListener("click", (e) => {
+    const profBtn = e.target.closest("#profileDropdownBtn, .topbar-profile");
+    if (profBtn) {
+        e.stopPropagation();
+        const notifDrop = document.getElementById("notificationDropdown");
+        const profMenu = document.getElementById("profileDropdownMenu");
+        if (notifDrop) notifDrop.classList.remove("active");
+        if (profMenu) profMenu.classList.toggle("active");
+        return;
+    }
+
+    const notifBtn = e.target.closest("#notificationBtn, .notification-btn");
+    if (notifBtn) {
+        e.stopPropagation();
+        const notifDrop = document.getElementById("notificationDropdown");
+        const profMenu = document.getElementById("profileDropdownMenu");
+        if (profMenu) profMenu.classList.remove("active");
+        if (notifDrop) notifDrop.classList.toggle("active");
+        return;
+    }
+
+    const openProfSettings = e.target.closest("#openProfileModalBtn");
+    if (openProfSettings) {
+        e.preventDefault();
+        openProfileModal();
+        return;
+    }
+
+    const openAct = e.target.closest("#openActivityBtn");
+    if (openAct) {
+        e.preventDefault();
+        openActivityModal();
+        return;
+    }
+
+    const addBtn = e.target.closest("#addTransactionBtn, .add-transaction-btn");
+    if (addBtn) {
+        e.preventDefault();
+        openModal();
+        return;
+    }
+
+    const srchBtn = e.target.closest("#searchToggleBtn");
+    if (srchBtn) {
+        e.preventDefault();
+        openSearchModal();
+        return;
+    }
+
+    // Close dropdowns if clicked outside
+    const notifDrop = document.getElementById("notificationDropdown");
+    const profMenu = document.getElementById("profileDropdownMenu");
+    if (notifDrop && !e.target.closest("#notificationDropdown") && !e.target.closest("#notificationBtn")) {
+        notifDrop.classList.remove("active");
+    }
+    if (profMenu && !e.target.closest("#profileDropdownMenu") && !e.target.closest("#profileDropdownBtn")) {
+        profMenu.classList.remove("active");
+    }
 });
 
 
 // =========================================
-// ADMIN PROFILE PERSISTENCE (LOCALSTORAGE)
+// ADMIN PROFILE & SYSTEM AUTHENTICATION (LOCALSTORAGE)
 // =========================================
 
-function loadSavedProfile() {
-    let saved = localStorage.getItem("accountexProfile");
-    if (!saved) {
-        const defaultProfile = { name: "Muhammad Rehan", email: "rehan@accountex.com", phone: "+92 300 9876543" };
-        localStorage.setItem("accountexProfile", JSON.stringify(defaultProfile));
-        saved = JSON.stringify(defaultProfile);
-    }
+// =========================================
+// MULTI-USER SYSTEM & DATA ISOLATION LAYER
+// =========================================
+
+function getUsersDB() {
     try {
-        const data = JSON.parse(saved);
+        const stored = localStorage.getItem("accountexUsersDB");
+        if (stored) return JSON.parse(stored);
+    } catch (e) {}
+
+    const defaultDB = {
+        "muhammad rehan": { name: "Muhammad Rehan", email: "rehan@accountex.com", phone: "+92 300 9876543", password: "admin123" },
+        "admin user": { name: "Admin User", email: "admin@accountex.com", phone: "+92 300 1234567", password: "admin123" },
+        "admin": { name: "Admin User", email: "admin@accountex.com", phone: "+92 300 1234567", password: "admin123" }
+    };
+    localStorage.setItem("accountexUsersDB", JSON.stringify(defaultDB));
+    return defaultDB;
+}
+
+function saveUserToDB(name, password, email = "", phone = "") {
+    const db = getUsersDB();
+    const cleanName = name.trim();
+    const key = cleanName.toLowerCase();
+    const existing = db[key] || {};
+    const userObj = {
+        name: cleanName,
+        email: email || existing.email || `${key.replace(/[^a-z0-9]/g, "")}@accountex.com`,
+        phone: phone || existing.phone || "+92 300 9876543",
+        password: password || existing.password || "admin123"
+    };
+
+    db[key] = userObj;
+    localStorage.setItem("accountexUsersDB", JSON.stringify(db));
+    localStorage.setItem("accountexLoggedInUser", cleanName);
+    localStorage.setItem("accountexProfile", JSON.stringify(userObj));
+    return userObj;
+}
+
+function getActiveUserName() {
+    try {
+        const loggedIn = localStorage.getItem("accountexLoggedInUser");
+        if (loggedIn && loggedIn.trim()) return loggedIn.trim();
+
+        const saved = localStorage.getItem("accountexProfile");
+        if (saved) {
+            const data = JSON.parse(saved);
+            if (data.name && data.name.trim()) return data.name.trim();
+        }
+    } catch (e) {}
+    return "Muhammad Rehan";
+}
+
+function getUserKey() {
+    return getActiveUserName().toLowerCase().trim().replace(/[^a-z0-9]/g, "_");
+}
+
+function getUserRecordsKey() {
+    return `accountex_records_${getUserKey()}`;
+}
+
+function getUserActivitiesKey() {
+    return `accountex_activities_${getUserKey()}`;
+}
+
+function getSavedProfile() {
+    const activeName = getActiveUserName();
+    const db = getUsersDB();
+    const userObj = db[activeName.toLowerCase().trim()];
+    if (userObj) return userObj;
+
+    try {
+        const saved = localStorage.getItem("accountexProfile");
+        if (saved) {
+            const data = JSON.parse(saved);
+            if (data.name) return data;
+        }
+    } catch (e) {}
+
+    return { name: activeName, email: `${getUserKey()}@accountex.com`, phone: "+92 300 9876543", password: "admin123" };
+}
+
+function loadSavedProfile() {
+    const data = getSavedProfile();
+    try {
         if (data.name) {
             document.querySelectorAll("#adminUserNameDisplay, #adminMenuName, .profile-info strong, .sidebar-user strong").forEach(el => {
                 el.textContent = data.name;
@@ -358,8 +505,12 @@ function loadSavedProfile() {
             const phoneInput = document.getElementById("adminPhoneInput");
             if (phoneInput) phoneInput.value = data.phone;
         }
+        const passwordInput = document.getElementById("adminPasswordInput");
+        if (passwordInput && data.password) {
+            passwordInput.value = data.password;
+        }
     } catch (e) {
-        console.error("Error loading saved profile", e);
+        console.error("Error loading active user profile", e);
     }
 }
 
@@ -367,6 +518,236 @@ if (document.readyState === "loading") {
     document.addEventListener("DOMContentLoaded", loadSavedProfile);
 } else {
     loadSavedProfile();
+}
+
+// =========================================
+// SYSTEM LOGIN, PASSWORD & ID VALIDATION SYSTEM
+// =========================================
+
+function ensureLoginModal() {
+    let modal = document.getElementById("loginModalOverlay");
+    if (!modal) {
+        modal = document.createElement("div");
+        modal.className = "modal-overlay";
+        modal.id = "loginModalOverlay";
+        modal.innerHTML = `
+            <div class="modal-card" style="max-width: 440px;">
+                <div class="modal-header" style="text-align: center; justify-content: center; position: relative;">
+                    <div style="text-align: center; width: 100%;">
+                        <div class="logo-icon" style="margin: 0 auto 10px; width: 48px; height: 48px; background: var(--primary); color: white; border-radius: 12px; display: flex; align-items: center; justify-content: center; font-size: 22px;">
+                            <i class="fas fa-user-lock"></i>
+                        </div>
+                        <h3 style="font-size: 20px; font-weight: 700; color: var(--text-dark); margin: 0;">System Authentication</h3>
+                        <p style="font-size: 13px; color: var(--text-medium); margin: 4px 0 0;">Enter valid User ID / Name and Password to sign in</p>
+                    </div>
+                </div>
+                <form id="loginForm" novalidate>
+                    <div class="modal-body" style="padding: 20px 24px;">
+                        <div class="form-group full-width" style="margin-bottom: 16px;">
+                            <label for="loginUserId" style="font-weight: 600;">User ID / Name</label>
+                            <div class="input-with-icon">
+                                <i class="fas fa-user input-icon"></i>
+                                <input type="text" id="loginUserId" class="form-control" placeholder="Enter User ID or Name" required autocomplete="username">
+                            </div>
+                            <div class="invalid-feedback" id="loginUserIdError">
+                                <i class="fas fa-circle-exclamation"></i> Invalid User ID / Name
+                            </div>
+                        </div>
+
+                        <div class="form-group full-width" style="margin-bottom: 16px;">
+                            <label for="loginPassword" style="font-weight: 600;">Password</label>
+                            <div class="input-with-icon password-input-wrapper">
+                                <i class="fas fa-key input-icon"></i>
+                                <input type="password" id="loginPassword" class="form-control" placeholder="Enter Password" required autocomplete="current-password">
+                                <button type="button" class="toggle-password-btn" title="Show/Hide Password">
+                                    <i class="fas fa-eye"></i>
+                                </button>
+                            </div>
+                            <div class="invalid-feedback" id="loginPasswordError">
+                                <i class="fas fa-circle-exclamation"></i> Invalid Password
+                            </div>
+                        </div>
+
+                        <div style="display: flex; justify-content: space-between; align-items: center; font-size: 12px; color: var(--text-medium); margin-top: 8px;">
+                            <label style="display: flex; align-items: center; gap: 6px; cursor: pointer; font-weight: normal; margin: 0;">
+                                <input type="checkbox" id="rememberMeCheck" checked style="accent-color: var(--primary);"> Remember Me
+                            </label>
+                            <span style="color: var(--primary); cursor: pointer; font-weight: 600;" id="demoCredentialsHint">Demo Credentials?</span>
+                        </div>
+                    </div>
+                    <div class="modal-footer" style="padding: 16px 24px; background: #f8fafc;">
+                        <button type="submit" class="btn-primary" style="width: 100%; justify-content: center; padding: 12px; font-size: 14px; font-weight: 600; display: flex; align-items: center; gap: 8px;">
+                            <i class="fas fa-right-to-bracket"></i> Log In
+                        </button>
+                    </div>
+                </form>
+            </div>
+        `;
+        document.body.appendChild(modal);
+    }
+    setupLoginModalEvents();
+}
+
+function isUserLoggedIn() {
+    const status = localStorage.getItem("accountexIsLoggedIn");
+    if (status === null) {
+        localStorage.setItem("accountexIsLoggedIn", "true");
+        return true;
+    }
+    return status === "true";
+}
+
+function showLoginModal() {
+    ensureLoginModal();
+    const modal = document.getElementById("loginModalOverlay");
+    if (modal) {
+        modal.classList.add("active");
+        const userIdInput = document.getElementById("loginUserId");
+        const passInput = document.getElementById("loginPassword");
+        const profile = getSavedProfile();
+
+        if (userIdInput) {
+            userIdInput.value = profile.name || getActiveUserName();
+        }
+        if (passInput && profile.password) {
+            passInput.value = profile.password;
+        }
+
+        setTimeout(() => {
+            if (passInput) passInput.focus();
+        }, 150);
+    }
+}
+
+function hideLoginModal() {
+    const modal = document.getElementById("loginModalOverlay");
+    if (modal) {
+        modal.classList.remove("active");
+    }
+}
+
+function setupLoginModalEvents() {
+    const loginForm = document.getElementById("loginForm");
+    const userIdInput = document.getElementById("loginUserId");
+    const passwordInput = document.getElementById("loginPassword");
+    const userIdError = document.getElementById("loginUserIdError");
+    const passwordError = document.getElementById("loginPasswordError");
+    const demoHint = document.getElementById("demoCredentialsHint");
+
+    if (demoHint) {
+        demoHint.addEventListener("click", () => {
+            const profile = getSavedProfile();
+            const uIn = document.getElementById("loginUserId");
+            const pIn = document.getElementById("loginPassword");
+            if (uIn) uIn.value = profile.name;
+            if (pIn) pIn.value = profile.password;
+            showToast(`User ID: "${profile.name}" | Password: "${profile.password}"`, "info");
+        });
+    }
+
+    if (userIdInput) {
+        userIdInput.addEventListener("input", () => {
+            userIdInput.classList.remove("is-invalid");
+        });
+    }
+
+    if (passwordInput) {
+        passwordInput.addEventListener("input", () => {
+            passwordInput.classList.remove("is-invalid");
+        });
+    }
+
+    if (loginForm) {
+        loginForm.onsubmit = function (e) {
+            e.preventDefault();
+
+            const enteredUserId = (userIdInput ? userIdInput.value : "").trim();
+            const enteredPassword = (passwordInput ? passwordInput.value : "").trim();
+
+            if (!enteredUserId || enteredUserId.length < 2) {
+                if (userIdInput) userIdInput.classList.add("is-invalid");
+                if (userIdError) userIdError.style.display = "flex";
+                showToast("Please enter a valid User ID / Name.", "error");
+                return;
+            }
+
+            if (!enteredPassword) {
+                if (passwordInput) passwordInput.classList.add("is-invalid");
+                if (passwordError) passwordError.style.display = "flex";
+                showToast("Please enter your password.", "error");
+                return;
+            }
+
+            const db = getUsersDB();
+            const userKey = enteredUserId.toLowerCase();
+            const existingUser = db[userKey];
+
+            if (existingUser) {
+                // Verify existing password
+                if (enteredPassword !== existingUser.password) {
+                    if (passwordInput) passwordInput.classList.add("is-invalid");
+                    if (passwordError) passwordError.style.display = "flex";
+                    showToast("Invalid Password for user ID '" + enteredUserId + "'.", "error");
+                    return;
+                }
+            } else {
+                // Register new user dynamically
+                saveUserToDB(enteredUserId, enteredPassword);
+            }
+
+            // Set active logged-in user
+            localStorage.setItem("accountexLoggedInUser", enteredUserId);
+            localStorage.setItem("accountexIsLoggedIn", "true");
+            hideLoginModal();
+
+            loadSavedProfile();
+            refreshUserRecordsTable();
+            renderActivityLogs();
+
+            showToast(`Welcome back, ${enteredUserId}! Signed into your personal account.`, "success");
+            addActivityLog("User Authentication", `User ID "${enteredUserId}" signed into personal account.`, "success", "fa-user-check");
+        };
+    }
+}
+
+// Global Delegated Password Visibility Toggle & Error Clear Listener
+document.addEventListener("click", (e) => {
+    const toggleBtn = e.target.closest(".toggle-password-btn");
+    if (toggleBtn) {
+        e.preventDefault();
+        const wrapper = toggleBtn.closest(".password-input-wrapper") || toggleBtn.parentElement;
+        const input = wrapper ? wrapper.querySelector("input") : null;
+        if (input) {
+            const isPassword = input.type === "password";
+            input.type = isPassword ? "text" : "password";
+            const icon = toggleBtn.querySelector("i");
+            if (icon) {
+                icon.className = isPassword ? "fas fa-eye-slash" : "fas fa-eye";
+            }
+        }
+    }
+});
+
+document.addEventListener("input", (e) => {
+    if (e.target && e.target.classList.contains("is-invalid")) {
+        e.target.classList.remove("is-invalid");
+    }
+});
+
+// Check Auth Status on DOM Ready
+function checkAuthStatus() {
+    ensureLoginModal();
+    if (!isUserLoggedIn()) {
+        showLoginModal();
+    } else {
+        hideLoginModal();
+    }
+}
+
+if (document.readyState === "loading") {
+    document.addEventListener("DOMContentLoaded", checkAuthStatus);
+} else {
+    checkAuthStatus();
 }
 
 // =========================================
@@ -407,45 +788,69 @@ if (document.readyState === "loading") {
     initTheme();
 }
 
-function openProfileModal() {
-    if (profileSettingsModal) {
-        if (profileDropdownMenu) profileDropdownMenu.classList.remove("active");
-        loadSavedProfile();
-        initTheme();
-        profileSettingsModal.classList.add("active");
+window.openProfileModal = function() {
+    const modal = document.getElementById("profileSettingsModal");
+    const menu = document.getElementById("profileDropdownMenu");
+    if (menu) menu.classList.remove("active");
+    loadSavedProfile();
+    initTheme();
+    if (modal) {
+        modal.style.display = "flex";
+        modal.classList.add("active");
+        modal.style.opacity = "1";
+        modal.style.visibility = "visible";
+        modal.style.pointerEvents = "auto";
+        modal.style.zIndex = "99999";
     }
+};
+
+function openProfileModal() {
+    window.openProfileModal();
 }
+
+window.closeProfileModal = function() {
+    const modal = document.getElementById("profileSettingsModal");
+    if (modal) {
+        modal.classList.remove("active");
+        modal.style.opacity = "0";
+        modal.style.visibility = "hidden";
+        modal.style.pointerEvents = "none";
+        modal.style.display = "none";
+        setTimeout(() => {
+            modal.style.display = "";
+            modal.style.opacity = "";
+            modal.style.visibility = "";
+            modal.style.pointerEvents = "";
+        }, 100);
+    }
+};
 
 function closeProfileModal() {
-    if (profileSettingsModal) {
-        profileSettingsModal.classList.remove("active");
+    window.closeProfileModal();
+}
+
+document.addEventListener("click", (e) => {
+    const openProf = e.target.closest("#openProfileModalBtn");
+    if (openProf) {
+        e.preventDefault();
+        openProfileModal();
+        return;
     }
-}
-
-if (openProfileModalBtn) openProfileModalBtn.addEventListener("click", openProfileModal);
-if (closeProfileModalBtn) closeProfileModalBtn.addEventListener("click", closeProfileModal);
-if (cancelProfileModalBtn) cancelProfileModalBtn.addEventListener("click", closeProfileModal);
-
-if (profileSettingsModal) {
-    profileSettingsModal.addEventListener("click", (e) => {
-        if (e.target === profileSettingsModal) closeProfileModal();
-    });
-}
+    const closeProf = e.target.closest("#closeProfileModalBtn, #cancelProfileModalBtn");
+    if (closeProf) {
+        e.preventDefault();
+        closeProfileModal();
+        return;
+    }
+    const modal = document.getElementById("profileSettingsModal");
+    if (modal && e.target === modal) {
+        closeProfileModal();
+    }
+});
 
 // =========================================
 // DYNAMIC ACTIVITY LOGGING SYSTEM (PER USER ID)
 // =========================================
-
-function getActiveUserName() {
-    try {
-        const saved = localStorage.getItem("accountexProfile");
-        if (saved) {
-            const data = JSON.parse(saved);
-            if (data.name) return data.name;
-        }
-    } catch (e) {}
-    return "Muhammad Rehan";
-}
 
 function getDefaultActivities(userName) {
     return [
@@ -487,26 +892,45 @@ function getDefaultActivities(userName) {
     ];
 }
 
+window.clearActivityLog = function() {
+    const key = getUserActivitiesKey();
+    localStorage.setItem(key, JSON.stringify([]));
+    localStorage.setItem("accountexActivities", JSON.stringify([]));
+    renderActivityLogs();
+    showToast("Activity log cleared successfully!", "info");
+};
+
+function clearActivityLog() {
+    window.clearActivityLog();
+}
+
 function renderActivityLogs() {
     const timeline = document.getElementById("activityTimeline");
     if (!timeline) return;
 
     const userName = getActiveUserName();
+    const key = getUserActivitiesKey();
     let activities = [];
 
     try {
-        const saved = localStorage.getItem("accountexActivities");
-        if (saved) {
+        const saved = localStorage.getItem(key);
+        if (saved !== null) {
             activities = JSON.parse(saved);
         } else {
             activities = getDefaultActivities(userName);
+            localStorage.setItem(key, JSON.stringify(activities));
         }
     } catch (e) {
         activities = getDefaultActivities(userName);
     }
 
     if (!activities || activities.length === 0) {
-        timeline.innerHTML = `<div style="padding: 24px; text-align: center; color: var(--text-medium); font-size: 13px;">No activity logs recorded for active user <strong>${userName}</strong>.</div>`;
+        timeline.innerHTML = `
+        <div style="padding: 40px 20px; text-align: center; color: var(--text-medium); font-size: 13px;">
+            <div style="font-size: 28px; color: var(--primary); margin-bottom: 10px;"><i class="fas fa-list-check"></i></div>
+            <strong style="color: var(--text-dark); font-size: 14px; display: block; margin-bottom: 4px;">No activity log entries found.</strong>
+            <span>System activity log for active user <strong>"${userName}"</strong> has been cleared.</span>
+        </div>`;
         return;
     }
 
@@ -529,6 +953,7 @@ function renderActivityLogs() {
 
 function addActivityLog(title, desc, type = "info", icon = "fa-circle-info") {
     const userName = getActiveUserName();
+    const key = getUserActivitiesKey();
     const newActivity = {
         type: type,
         icon: icon,
@@ -539,7 +964,7 @@ function addActivityLog(title, desc, type = "info", icon = "fa-circle-info") {
 
     let activities = [];
     try {
-        const saved = localStorage.getItem("accountexActivities");
+        const saved = localStorage.getItem(key);
         if (saved) {
             activities = JSON.parse(saved);
         } else {
@@ -550,12 +975,13 @@ function addActivityLog(title, desc, type = "info", icon = "fa-circle-info") {
     }
 
     activities.unshift(newActivity);
-    localStorage.setItem("accountexActivities", JSON.stringify(activities));
+    localStorage.setItem(key, JSON.stringify(activities));
     renderActivityLogs();
 }
 
 function openActivityModal() {
-    if (profileDropdownMenu) profileDropdownMenu.classList.remove("active");
+    const menu = document.getElementById("profileDropdownMenu");
+    if (menu) menu.classList.remove("active");
     renderActivityLogs();
     const modal = document.getElementById("activityLogModal");
     if (modal) {
@@ -603,11 +1029,10 @@ document.addEventListener("click", (e) => {
         return;
     }
 
-    const clearActBtn = e.target.closest("#clearActivityLogBtn");
+    const clearActBtn = e.target.closest("#clearActivityLogBtn, .clear-activity-btn");
     if (clearActBtn) {
-        localStorage.setItem("accountexActivities", JSON.stringify([]));
-        renderActivityLogs();
-        showToast("Activity log cleared", "info");
+        e.preventDefault();
+        window.clearActivityLog();
         return;
     }
 
@@ -624,33 +1049,97 @@ document.addEventListener("click", (e) => {
     }
 });
 
-if (profileSettingsForm) {
-    profileSettingsForm.addEventListener("submit", (e) => {
+// Delegated submit for Profile Settings Form
+document.addEventListener("submit", (e) => {
+    if (e.target && e.target.id === "profileSettingsForm") {
         e.preventDefault();
-        const newName = document.getElementById("adminNameInput")?.value.trim() || "";
-        const newEmail = document.getElementById("adminEmailInput")?.value.trim() || "";
-        const newPhone = document.getElementById("adminPhoneInput")?.value.trim() || "";
+        const nameInput = document.getElementById("adminNameInput");
+        const passwordInput = document.getElementById("adminPasswordInput");
+        const emailInput = document.getElementById("adminEmailInput");
+        const phoneInput = document.getElementById("adminPhoneInput");
 
-        if (newName) {
-            const profileObj = { name: newName, email: newEmail, phone: newPhone };
-            localStorage.setItem("accountexProfile", JSON.stringify(profileObj));
+        const newName = nameInput ? nameInput.value.trim() : "";
+        const newEmail = emailInput ? emailInput.value.trim() : "";
+        const newPhone = phoneInput ? phoneInput.value.trim() : "";
+        const newPassword = passwordInput ? passwordInput.value.trim() : "";
 
-            loadSavedProfile();
-            addActivityLog("Profile Details Updated", `Updated account details for user ID "${newName}".`, "info", "fa-user-gear");
-            closeProfileModal();
-            showToast("System & profile settings saved!", "success");
+        let isValid = true;
+
+        if (!newName || newName.length < 2) {
+            isValid = false;
+            if (nameInput) nameInput.classList.add("is-invalid");
+        } else {
+            if (nameInput) nameInput.classList.remove("is-invalid");
         }
-    });
-}
+
+        if (!newPassword || newPassword.length < 3) {
+            isValid = false;
+            if (passwordInput) passwordInput.classList.add("is-invalid");
+        } else {
+            if (passwordInput) passwordInput.classList.remove("is-invalid");
+        }
+
+        if (!isValid) {
+            showToast("Invalid User ID / Name or Password.", "error");
+            return;
+        }
+
+        const oldRecordsKey = getUserRecordsKey();
+        const oldActivitiesKey = getUserActivitiesKey();
+        const oldRecords = localStorage.getItem(oldRecordsKey);
+        const oldActivities = localStorage.getItem(oldActivitiesKey);
+
+        saveUserToDB(newName, newPassword, newEmail, newPhone);
+        localStorage.setItem("accountexLoggedInUser", newName);
+
+        const newRecordsKey = getUserRecordsKey();
+        const newActivitiesKey = getUserActivitiesKey();
+
+        if (oldRecordsKey !== newRecordsKey) {
+            if (oldRecords && (!localStorage.getItem(newRecordsKey) || localStorage.getItem(newRecordsKey) === "[]")) {
+                localStorage.setItem(newRecordsKey, oldRecords);
+            }
+            if (oldActivities && (!localStorage.getItem(newActivitiesKey) || localStorage.getItem(newActivitiesKey) === "[]")) {
+                localStorage.setItem(newActivitiesKey, oldActivities);
+            }
+        }
+
+        loadSavedProfile();
+        refreshUserRecordsTable();
+        updateDashboardOverviewCards();
+        updateSubpageMetricCards();
+        updateFinancialChartData();
+        addActivityLog("Profile Details Updated", `Updated account details & credentials for user ID "${newName}".`, "info", "fa-user-gear");
+        closeProfileModal();
+        showToast(`System & profile settings saved! Active User ID is now "${newName}".`, "success");
+    }
+});
+
+// Live sync for Admin Name Input
+document.addEventListener("input", (e) => {
+    if (e.target && e.target.id === "adminNameInput") {
+        const liveVal = e.target.value.trim();
+        if (liveVal) {
+            document.querySelectorAll("#adminUserNameDisplay, #adminMenuName, .profile-info strong, .sidebar-user strong, .user-info strong").forEach(el => {
+                el.textContent = liveVal;
+            });
+            const initials = liveVal.split(" ").map(n => n[0]).filter(Boolean).join("").toUpperCase().substring(0, 2);
+            document.querySelectorAll(".profile-avatar, .user-avatar").forEach(el => {
+                el.textContent = initials || "MR";
+            });
+        }
+    }
+});
 
 // Logout Action
 if (logoutBtn) {
     logoutBtn.addEventListener("click", () => {
         if (profileDropdownMenu) profileDropdownMenu.classList.remove("active");
-        showToast("Logged out successfully. Redirecting...", "info");
-        setTimeout(() => {
-            window.location.reload();
-        }, 1500);
+        localStorage.setItem("accountexIsLoggedIn", "false");
+        showToast("Logged out successfully.", "info");
+        const passInput = document.getElementById("loginPassword");
+        if (passInput) passInput.value = "";
+        showLoginModal();
     });
 }
 
@@ -693,7 +1182,7 @@ if (chartCanvas && typeof Chart !== "undefined") {
 
     let activeFilter = "monthly";
 
-    const financialChart = new Chart(ctx, {
+    window.financialChartInstance = new Chart(ctx, {
         type: "line",
         data: {
             labels: chartDataMap[activeFilter].labels,
@@ -767,10 +1256,10 @@ if (chartCanvas && typeof Chart !== "undefined") {
         chartFilter.addEventListener("change", (e) => {
             const selected = e.target.value;
             if (chartDataMap[selected]) {
-                financialChart.data.labels = chartDataMap[selected].labels;
-                financialChart.data.datasets[0].data = chartDataMap[selected].income;
-                financialChart.data.datasets[1].data = chartDataMap[selected].expense;
-                financialChart.update();
+                window.financialChartInstance.data.labels = chartDataMap[selected].labels;
+                window.financialChartInstance.data.datasets[0].data = chartDataMap[selected].income;
+                window.financialChartInstance.data.datasets[1].data = chartDataMap[selected].expense;
+                window.financialChartInstance.update();
             }
         });
     }
@@ -783,20 +1272,53 @@ if (chartCanvas && typeof Chart !== "undefined") {
 
 const LOCAL_STORAGE_KEY = "accountex_custom_records";
 
+// =========================================
+// LOCALSTORAGE PERSISTENCE LAYER (PER USER ID)
+// =========================================
+
 function getSavedRecords() {
     try {
-        const stored = localStorage.getItem(LOCAL_STORAGE_KEY);
-        return stored ? JSON.parse(stored) : [];
+        const key = getUserRecordsKey();
+        const activeUser = getActiveUserName().toLowerCase().trim();
+        const isPrimaryAdmin = (activeUser === "muhammad rehan" || activeUser === "admin user" || activeUser === "admin");
+
+        const stored = localStorage.getItem(key);
+        if (stored) {
+            const parsed = JSON.parse(stored);
+            // If non-primary second user has default 2 demo items copied previously, clear them to return clean []
+            if (!isPrimaryAdmin && Array.isArray(parsed) && parsed.length === 2 && parsed[0].ref === "INV-1025" && parsed[1].ref === "BILL-784" && !parsed[0].isCustom) {
+                localStorage.setItem(key, JSON.stringify([]));
+                return [];
+            }
+            return parsed;
+        }
+
+        // Default sample records ONLY for primary demo account
+        if (isPrimaryAdmin) {
+            const initialDefault = [
+                { id: "1", party: "Ahmed Traders", type: "income", category: "Sales", amount: 45000, dateRaw: "2026-08-17", status: "paid", ref: "INV-1025" },
+                { id: "2", party: "Al-Noor Suppliers", type: "expense", category: "Purchase", amount: 18500, dateRaw: "2026-08-16", status: "pending", ref: "BILL-784" }
+            ];
+            localStorage.setItem(key, JSON.stringify(initialDefault));
+            return initialDefault;
+        }
+
+        // For any second user or new user account, return clean empty list []
+        return [];
     } catch (e) {
-        console.error("Error reading localStorage", e);
+        console.error("Error reading user records", e);
         return [];
     }
 }
 
 function saveRecord(record) {
+    const key = getUserRecordsKey();
     const records = getSavedRecords();
+    record.userId = getActiveUserName();
+    record.isCustom = true;
     records.unshift(record);
-    localStorage.setItem(LOCAL_STORAGE_KEY, JSON.stringify(records));
+    localStorage.setItem(key, JSON.stringify(records));
+    updateDashboardOverviewCards();
 }
 
 function getPageContext(thList) {
@@ -837,7 +1359,6 @@ function renderRecordRow(record, tbody, pageContext) {
     tr.setAttribute("data-saved-id", record.id || "");
 
     if (pageContext === "receivables") {
-        // Customer | Invoice # | Due Date | Original Amount | Outstanding Balance | Aging Status
         const balanceDue = status === "paid" ? 0 : numAmount;
         tr.innerHTML = `
             <td>
@@ -853,7 +1374,6 @@ function renderRecordRow(record, tbody, pageContext) {
             <td><span class="status ${status === "paid" ? "paid" : "pending"}">${status === "paid" ? "Current" : "Pending"}</span></td>
         `;
     } else if (pageContext === "invoices") {
-        // Invoice # | Client / Customer | Issue Date | Due Date | Total Amount | Status
         tr.innerHTML = `
             <td><strong>${ref}</strong></td>
             <td>
@@ -868,7 +1388,6 @@ function renderRecordRow(record, tbody, pageContext) {
             <td><span class="status ${status === "paid" ? "paid" : "pending"}">${status === "paid" ? "Paid" : "Pending"}</span></td>
         `;
     } else if (pageContext === "payables") {
-        // Supplier / Vendor | Bill # | Due Date | Total Amount | Amount Due | Status
         const amountDue = status === "paid" ? 0 : numAmount;
         tr.innerHTML = `
             <td>
@@ -884,7 +1403,6 @@ function renderRecordRow(record, tbody, pageContext) {
             <td><span class="status ${status === "paid" ? "paid" : "pending"}">${status === "paid" ? "Paid" : "Pending"}</span></td>
         `;
     } else if (pageContext === "cashbook") {
-        // Date | Particulars / Description | Category | Cash In (Rs.) | Cash Out (Rs.) | Running Balance (Rs.)
         tr.innerHTML = `
             <td>${formattedDate}</td>
             <td>
@@ -899,7 +1417,6 @@ function renderRecordRow(record, tbody, pageContext) {
             <td><strong>Rs. ${numAmount.toLocaleString()}</strong></td>
         `;
     } else if (pageContext === "ledger") {
-        // Date | Account Title / Description | Voucher # | Debit (Rs.) | Credit (Rs.) | Running Balance (Rs.)
         tr.innerHTML = `
             <td>${formattedDate}</td>
             <td>
@@ -914,7 +1431,6 @@ function renderRecordRow(record, tbody, pageContext) {
             <td><strong>Rs. ${numAmount.toLocaleString()}</strong></td>
         `;
     } else if (pageContext === "customers") {
-        // Customer / Business | Contact Email | Phone | Total Invoiced | Current Balance | Status
         tr.innerHTML = `
             <td>
                 <div class="transaction-name">
@@ -929,7 +1445,6 @@ function renderRecordRow(record, tbody, pageContext) {
             <td><span class="status paid">Active</span></td>
         `;
     } else if (pageContext === "suppliers") {
-        // Supplier / Vendor | Category | Contact Email | Total Purchases | Pending Payable | Status
         tr.innerHTML = `
             <td>
                 <div class="transaction-name">
@@ -944,7 +1459,6 @@ function renderRecordRow(record, tbody, pageContext) {
             <td><span class="status paid">Active</span></td>
         `;
     } else {
-        // Default Dashboard: Transaction Name | Date | Category | Amount | Status
         const iconClass = isIncome ? "fa-user" : "fa-building";
         const amountClass = isIncome ? "amount received" : "amount spent";
         const amountPrefix = isIncome ? "+ " : "- ";
@@ -968,25 +1482,334 @@ function renderRecordRow(record, tbody, pageContext) {
     tbody.insertBefore(tr, tbody.firstChild);
 }
 
-function loadSavedRecords() {
+function updateDashboardOverviewCards() {
+    const saved = getSavedRecords();
+
+    let totalIncome = 0;
+    let totalExpenses = 0;
+    let totalReceivable = 0;
+    let totalPayable = 0;
+
+    saved.forEach(rec => {
+        const amt = parseFloat(rec.amount) || 0;
+        const isIncome = rec.type === "income";
+        const isPending = rec.status === "pending";
+
+        if (isIncome) {
+            totalIncome += amt;
+            if (isPending) {
+                totalReceivable += amt;
+            }
+        } else {
+            totalExpenses += amt;
+            if (isPending) {
+                totalPayable += amt;
+            }
+        }
+    });
+
+    const cashBalance = Math.max(0, totalIncome - totalExpenses - totalReceivable);
+    const totalBalance = totalIncome - totalExpenses;
+
+    const balanceEl = document.getElementById("dashTotalBalance");
+    const receivableEl = document.getElementById("dashTotalReceivable");
+    const payableEl = document.getElementById("dashTotalPayable");
+    const cashEl = document.getElementById("dashCashBalance");
+
+    const incomeSumEl = document.getElementById("dashTotalIncome");
+    const expenseSumEl = document.getElementById("dashTotalExpenses");
+
+    const incomeProgress = document.getElementById("incomeProgressBar");
+    const expenseProgress = document.getElementById("expenseProgressBar");
+    const incomePercentText = document.getElementById("incomePercentText");
+    const expensePercentText = document.getElementById("expensePercentText");
+
+    if (balanceEl) balanceEl.textContent = `Rs. ${totalBalance.toLocaleString()}`;
+    if (receivableEl) receivableEl.textContent = `Rs. ${totalReceivable.toLocaleString()}`;
+    if (payableEl) payableEl.textContent = `Rs. ${totalPayable.toLocaleString()}`;
+    if (cashEl) cashEl.textContent = `Rs. ${cashBalance.toLocaleString()}`;
+
+    if (incomeSumEl) incomeSumEl.textContent = `Rs. ${totalIncome.toLocaleString()}`;
+    if (expenseSumEl) expenseSumEl.textContent = `Rs. ${totalExpenses.toLocaleString()}`;
+
+    const maxVal = Math.max(totalIncome, totalExpenses, 1);
+    const incPct = saved.length === 0 ? 0 : Math.round((totalIncome / maxVal) * 100);
+    const expPct = saved.length === 0 ? 0 : Math.round((totalExpenses / maxVal) * 100);
+
+    if (incomeProgress) incomeProgress.style.width = `${incPct}%`;
+    if (expenseProgress) expenseProgress.style.width = `${expPct}%`;
+    if (incomePercentText) incomePercentText.textContent = `${incPct > 0 ? '+' : ''}${incPct}%`;
+    if (expensePercentText) expensePercentText.textContent = `${expPct > 0 ? '-' : ''}${expPct}%`;
+
+    // Update trend labels
+    const balTrend = document.getElementById("dashBalanceTrend");
+    const recTrend = document.getElementById("dashReceivableTrend");
+    const payTrend = document.getElementById("dashPayableTrend");
+    const cashTrend = document.getElementById("dashCashTrend");
+
+    if (balTrend) balTrend.textContent = saved.length === 0 ? "0.0%" : "8.4%";
+    if (recTrend) recTrend.textContent = saved.length === 0 ? "0.0%" : "5.2%";
+    if (payTrend) payTrend.textContent = saved.length === 0 ? "0.0%" : "2.8%";
+    if (cashTrend) cashTrend.textContent = saved.length === 0 ? "0.0%" : "12.6%";
+
+    updateSubpageMetricCards(saved);
+    updateFinancialChartData(saved);
+}
+
+function updateSubpageMetricCards(saved) {
+    let totalIncome = 0;
+    let totalExpenses = 0;
+    let totalReceivable = 0;
+    let totalPayable = 0;
+
+    let paidIncome = 0;
+    let paidExpenses = 0;
+
+    const uniqueCustomers = new Set();
+    const uniqueSuppliers = new Set();
+
+    saved.forEach(rec => {
+        const amt = parseFloat(rec.amount) || 0;
+        const isIncome = rec.type === "income";
+        const isPaid = rec.status === "paid";
+
+        if (isIncome) {
+            totalIncome += amt;
+            if (isPaid) paidIncome += amt;
+            else totalReceivable += amt;
+            if (rec.party) uniqueCustomers.add(rec.party.toLowerCase().trim());
+        } else {
+            totalExpenses += amt;
+            if (isPaid) paidExpenses += amt;
+            else totalPayable += amt;
+            if (rec.party) uniqueSuppliers.add(rec.party.toLowerCase().trim());
+        }
+    });
+
+    const netProfit = totalIncome - totalExpenses;
+    const cashBalance = Math.max(0, paidIncome - paidExpenses);
+
+    const cards = document.querySelectorAll(".financial-cards .financial-card h2, .financial-card h2");
+
+    if (cards && cards.length >= 2) {
+        const path = window.location.pathname.toLowerCase();
+
+        if (path.includes("receivable")) {
+            cards[0].textContent = `Rs. ${totalReceivable.toLocaleString()}`;
+            cards[1].textContent = `Rs. ${saved.length === 0 ? 0 : Math.round(totalReceivable * 0.25).toLocaleString()}`;
+            cards[2].textContent = `Rs. ${saved.length === 0 ? 0 : Math.round(totalReceivable * 0.75).toLocaleString()}`;
+            if (cards[3]) cards[3].textContent = `Rs. ${paidIncome.toLocaleString()}`;
+        } else if (path.includes("payable")) {
+            cards[0].textContent = `Rs. ${totalPayable.toLocaleString()}`;
+            cards[1].textContent = `Rs. ${saved.length === 0 ? 0 : Math.round(totalPayable * 0.4).toLocaleString()}`;
+            cards[2].textContent = `Rs. ${saved.length === 0 ? 0 : Math.round(totalPayable * 0.6).toLocaleString()}`;
+            if (cards[3]) cards[3].textContent = `Rs. ${paidExpenses.toLocaleString()}`;
+        } else if (path.includes("cashbook")) {
+            cards[0].textContent = `Rs. ${saved.length === 0 ? 0 : (250000).toLocaleString()}`;
+            cards[1].textContent = `Rs. ${paidIncome.toLocaleString()}`;
+            cards[2].textContent = `Rs. ${paidExpenses.toLocaleString()}`;
+            if (cards[3]) cards[3].textContent = `Rs. ${cashBalance.toLocaleString()}`;
+        } else if (path.includes("invoices")) {
+            cards[0].textContent = `Rs. ${totalIncome.toLocaleString()}`;
+            cards[1].textContent = `Rs. ${paidIncome.toLocaleString()}`;
+            cards[2].textContent = `Rs. ${totalReceivable.toLocaleString()}`;
+            if (cards[3]) cards[3].textContent = `Rs. ${saved.length === 0 ? 0 : Math.round(totalReceivable * 0.2).toLocaleString()}`;
+        } else if (path.includes("income-expense")) {
+            cards[0].textContent = `Rs. ${totalIncome.toLocaleString()}`;
+            cards[1].textContent = `Rs. ${totalExpenses.toLocaleString()}`;
+            cards[2].textContent = `Rs. ${netProfit.toLocaleString()}`;
+
+            const revHeader = document.querySelector(".summary-card:first-child h3");
+            const expHeader = document.querySelector(".summary-card:last-child h3");
+            if (revHeader) revHeader.textContent = `Rs. ${totalIncome.toLocaleString()}`;
+            if (expHeader) expHeader.textContent = `Rs. ${totalExpenses.toLocaleString()}`;
+        } else if (path.includes("ledger")) {
+            cards[0].textContent = `Rs. ${totalIncome.toLocaleString()}`;
+            cards[1].textContent = `Rs. ${totalPayable.toLocaleString()}`;
+            cards[2].textContent = `Rs. ${netProfit.toLocaleString()}`;
+            if (cards[3]) cards[3].textContent = `Rs. ${netProfit.toLocaleString()}`;
+        } else if (path.includes("customers")) {
+            cards[0].textContent = `${uniqueCustomers.size}`;
+            cards[1].textContent = `Rs. ${totalReceivable.toLocaleString()}`;
+            if (cards[2]) cards[2].textContent = `Rs. ${totalIncome.toLocaleString()}`;
+        } else if (path.includes("suppliers")) {
+            cards[0].textContent = `${uniqueSuppliers.size}`;
+            cards[1].textContent = `Rs. ${totalPayable.toLocaleString()}`;
+            if (cards[2]) cards[2].textContent = `Rs. ${totalExpenses.toLocaleString()}`;
+        }
+    }
+}
+
+function updateFinancialChartData(saved) {
+    if (!window.financialChartInstance) return;
+
+    if (!saved || saved.length === 0) {
+        window.financialChartInstance.data.datasets[0].data = [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0];
+        window.financialChartInstance.data.datasets[1].data = [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0];
+        window.financialChartInstance.update();
+        return;
+    }
+
+    const monthlyIncome = new Array(12).fill(0);
+    const monthlyExpenses = new Array(12).fill(0);
+
+    saved.forEach(rec => {
+        const amt = parseFloat(rec.amount) || 0;
+        const d = new Date(rec.dateRaw || Date.now());
+        const month = d.getMonth();
+        if (rec.type === "income") {
+            monthlyIncome[month] += amt;
+        } else {
+            monthlyExpenses[month] += amt;
+        }
+    });
+
+    window.financialChartInstance.data.datasets[0].data = monthlyIncome;
+    window.financialChartInstance.data.datasets[1].data = monthlyExpenses;
+    window.financialChartInstance.update();
+}
+
+function refreshUserRecordsTable() {
+    updateDashboardOverviewCards();
+
     const table = document.querySelector(".transactions-table");
     const tbody = table ? table.querySelector("tbody") : null;
     if (!table || !tbody) return;
+
+    tbody.innerHTML = "";
 
     const thList = Array.from(table.querySelectorAll("thead th")).map(th => th.textContent.trim().toLowerCase());
     const pageContext = getPageContext(thList);
 
     const saved = getSavedRecords();
+    const activeUser = getActiveUserName();
+
+    if (saved.length === 0) {
+        const tr = document.createElement("tr");
+        tr.className = "no-records-row";
+        tr.innerHTML = `
+            <td colspan="${thList.length || 5}" style="text-align: center; padding: 32px 20px; color: var(--text-medium); font-size: 13px;">
+                <div style="font-size: 24px; margin-bottom: 8px; color: var(--primary);"><i class="fas fa-folder-open"></i></div>
+                <strong style="color: var(--text-dark); font-size: 14px; display: block;">No transaction records found for user "${activeUser}".</strong>
+                <span style="font-size: 12px; color: var(--text-medium); margin-top: 4px; display: inline-block;">Transactions added by this user will appear here isolated to their User ID / Name.</span>
+            </td>
+        `;
+        tbody.appendChild(tr);
+        return;
+    }
+
     saved.slice().reverse().forEach(record => {
         renderRecordRow(record, tbody, pageContext);
     });
 }
 
+function loadSavedRecords() {
+    refreshUserRecordsTable();
+}
+
 // Run loadSavedRecords on DOM ready
 document.addEventListener("DOMContentLoaded", loadSavedRecords);
-// Fallback immediate execution in case DOMContentLoaded fired
 if (document.readyState === "complete" || document.readyState === "interactive") {
     loadSavedRecords();
+}
+
+
+// =========================================
+// AUTOMATIC BILL # / REFERENCE GENERATOR
+// =========================================
+
+function generateAutoBillNumber() {
+    const path = window.location.pathname.toLowerCase();
+    let prefix = "BILL-";
+    let defaultStart = 785;
+
+    const typeSelect = document.getElementById("transType");
+    const categorySelect = document.getElementById("transCategory");
+
+    const selectedType = typeSelect ? typeSelect.value : "";
+    const selectedCategory = categorySelect ? categorySelect.value : "";
+
+    if (path.includes("invoices") || path.includes("receivable") || selectedType === "income" || selectedCategory === "Sales") {
+        prefix = "INV-";
+        defaultStart = 1026;
+    } else if (path.includes("payable") || path.includes("suppliers") || selectedType === "expense" || selectedCategory === "Purchase") {
+        prefix = "BILL-";
+        defaultStart = 785;
+    } else if (path.includes("cashbook")) {
+        prefix = "CS-";
+        defaultStart = 404;
+    } else if (path.includes("income-expense") || selectedCategory === "Utilities") {
+        prefix = "EXP-";
+        defaultStart = 206;
+    } else if (path.includes("ledger")) {
+        prefix = "VOUCH-";
+        defaultStart = 903;
+    }
+
+    let maxNum = defaultStart - 1;
+    const regex = new RegExp(prefix + "(\\d+)", "i");
+
+    // Scan existing DOM table cells
+    document.querySelectorAll("table tbody td, table tbody tr").forEach(el => {
+        const text = el.textContent || "";
+        const match = text.match(regex);
+        if (match && match[1]) {
+            const num = parseInt(match[1], 10);
+            if (!isNaN(num) && num > maxNum) {
+                maxNum = num;
+            }
+        }
+    });
+
+    // Scan saved records in LocalStorage
+    try {
+        const saved = getSavedRecords();
+        saved.forEach(rec => {
+            if (rec.ref) {
+                const match = rec.ref.match(regex);
+                if (match && match[1]) {
+                    const num = parseInt(match[1], 10);
+                    if (!isNaN(num) && num > maxNum) {
+                        maxNum = num;
+                    }
+                }
+            }
+        });
+    } catch (e) {}
+
+    const nextNum = maxNum + 1;
+    return `${prefix}${nextNum}`;
+}
+
+function autoFillBillNumber() {
+    const refInput = document.getElementById("transRef");
+    if (refInput) {
+        refInput.value = generateAutoBillNumber();
+    }
+}
+
+// Regenerate click handler
+document.addEventListener("click", (e) => {
+    const regenBtn = e.target.closest("#regenerateRefBtn, .regenerate-ref-btn");
+    if (regenBtn) {
+        e.preventDefault();
+        autoFillBillNumber();
+        showToast("Auto-generated new Bill # / Reference!", "info");
+    }
+});
+
+// Category or Type change auto update
+document.addEventListener("change", (e) => {
+    if (e.target && (e.target.id === "transType" || e.target.id === "transCategory")) {
+        autoFillBillNumber();
+    }
+});
+
+// Run on page load
+if (document.readyState === "loading") {
+    document.addEventListener("DOMContentLoaded", autoFillBillNumber);
+} else {
+    autoFillBillNumber();
 }
 
 
@@ -1000,46 +1823,92 @@ const closeModalBtn = document.getElementById("closeModalBtn");
 const cancelModalBtn = document.getElementById("cancelModalBtn");
 const addTransactionForm = document.getElementById("addTransactionForm");
 
-function openModal() {
-    if (addTransactionModal) {
-        addTransactionModal.classList.add("active");
+window.openModal = function() {
+    const modal = document.getElementById("addTransactionModal");
+    if (modal) {
+        modal.classList.add("active");
+        modal.style.opacity = "1";
+        modal.style.visibility = "visible";
+        modal.style.pointerEvents = "auto";
+        modal.style.zIndex = "99999";
+
         const dateInput = document.getElementById("transDate");
         if (dateInput && !dateInput.value) {
             const today = new Date().toISOString().split("T")[0];
             dateInput.value = today;
         }
+        if (typeof autoFillBillNumber === "function") {
+            autoFillBillNumber();
+        }
     }
+};
+
+function openModal() {
+    window.openModal();
 }
+
+window.closeModal = function() {
+    const modal = document.getElementById("addTransactionModal");
+    if (modal) {
+        modal.classList.remove("active");
+        modal.style.opacity = "";
+        modal.style.visibility = "";
+        modal.style.pointerEvents = "";
+    }
+};
 
 function closeModal() {
-    if (addTransactionModal) {
-        addTransactionModal.classList.remove("active");
+    window.closeModal();
+}
+
+document.addEventListener("click", (e) => {
+    const addBtn = e.target.closest("#addTransactionBtn, .add-transaction-btn, .btn-action-main");
+    if (addBtn) {
+        e.preventDefault();
+        openModal();
+        return;
     }
-}
 
-if (addTransactionBtn) addTransactionBtn.addEventListener("click", openModal);
-if (closeModalBtn) closeModalBtn.addEventListener("click", closeModal);
-if (cancelModalBtn) cancelModalBtn.addEventListener("click", closeModal);
+    const closeBtn = e.target.closest("#closeModalBtn, #cancelModalBtn");
+    if (closeBtn) {
+        e.preventDefault();
+        closeModal();
+        return;
+    }
 
-if (addTransactionModal) {
-    addTransactionModal.addEventListener("click", (e) => {
-        if (e.target === addTransactionModal) closeModal();
-    });
-}
+    const modal = document.getElementById("addTransactionModal");
+    if (modal && e.target === modal) {
+        closeModal();
+    }
+});
 
 if (addTransactionForm) {
     addTransactionForm.addEventListener("submit", (e) => {
         e.preventDefault();
 
-        const party = document.getElementById("transParty").value.trim();
-        const type = document.getElementById("transType").value;
-        const category = document.getElementById("transCategory").value;
-        const amount = parseFloat(document.getElementById("transAmount").value);
-        const dateRaw = document.getElementById("transDate").value;
-        const status = document.getElementById("transStatus").value;
-        const ref = document.getElementById("transRef").value.trim() || "INV-" + Math.floor(1000 + Math.random() * 9000);
+        const partyInput = document.getElementById("transParty");
+        const party = partyInput ? partyInput.value.trim() : "";
+        const type = document.getElementById("transType")?.value || "expense";
+        const category = document.getElementById("transCategory")?.value || "Purchase";
+        const amount = parseFloat(document.getElementById("transAmount")?.value);
+        const dateRaw = document.getElementById("transDate")?.value;
+        const status = document.getElementById("transStatus")?.value || "paid";
+        
+        let refInput = document.getElementById("transRef");
+        let ref = refInput && refInput.value.trim() ? refInput.value.trim() : generateAutoBillNumber();
 
-        if (!party || isNaN(amount)) return;
+        if (!party) {
+            if (partyInput) partyInput.classList.add("is-invalid");
+            showToast("Please enter a valid Vendor / Party Name.", "error");
+            return;
+        }
+
+        if (isNaN(amount) || amount <= 0) {
+            const amountInput = document.getElementById("transAmount");
+            if (amountInput) amountInput.classList.add("is-invalid");
+            showToast("Please enter a valid payment amount.", "error");
+            return;
+        }
 
         const newRecord = {
             id: Date.now().toString(),
@@ -1066,6 +1935,7 @@ if (addTransactionForm) {
 
         closeModal();
         addTransactionForm.reset();
-        showToast(`Record for "${party}" saved successfully!`, "success");
+        autoFillBillNumber();
+        showToast(`Record for "${party}" (${ref}) saved successfully!`, "success");
     });
 }

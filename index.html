@@ -223,7 +223,7 @@
             <p>Welcome back! Here's your business financial overview.</p>
         </div>
 
-        <button class="add-transaction-btn" id="addTransactionBtn">
+        <button class="add-transaction-btn" id="addTransactionBtn" onclick="openModal()">
             <i class="fas fa-plus"></i>
             Add Transaction
         </button>
@@ -240,12 +240,12 @@
                 </div>
 
                 <span class="card-status positive">
-                    <i class="fas fa-arrow-up"></i> 8.4%
+                    <i class="fas fa-arrow-up"></i> <span id="dashBalanceTrend">0.0%</span>
                 </span>
             </div>
 
             <p>Total Balance</p>
-            <h2>Rs. 485,250</h2>
+            <h2 id="dashTotalBalance">Rs. 0</h2>
             <span class="card-footer">Compared to last month</span>
         </div>
 
@@ -257,12 +257,12 @@
                 </div>
 
                 <span class="card-status positive">
-                    <i class="fas fa-arrow-up"></i> 5.2%
+                    <i class="fas fa-arrow-up"></i> <span id="dashReceivableTrend">0.0%</span>
                 </span>
             </div>
 
             <p>Total Receivable</p>
-            <h2>Rs. 185,500</h2>
+            <h2 id="dashTotalReceivable">Rs. 0</h2>
             <span class="card-footer">Amount to receive</span>
         </div>
 
@@ -274,12 +274,12 @@
                 </div>
 
                 <span class="card-status negative">
-                    <i class="fas fa-arrow-down"></i> 2.8%
+                    <i class="fas fa-arrow-down"></i> <span id="dashPayableTrend">0.0%</span>
                 </span>
             </div>
 
             <p>Total Payable</p>
-            <h2>Rs. 92,750</h2>
+            <h2 id="dashTotalPayable">Rs. 0</h2>
             <span class="card-footer">Amount to pay</span>
         </div>
 
@@ -291,12 +291,12 @@
                 </div>
 
                 <span class="card-status positive">
-                    <i class="fas fa-arrow-up"></i> 12.6%
+                    <i class="fas fa-arrow-up"></i> <span id="dashCashTrend">0.0%</span>
                 </span>
             </div>
 
             <p>Cash Balance</p>
-            <h2>Rs. 276,400</h2>
+            <h2 id="dashCashBalance">Rs. 0</h2>
             <span class="card-footer">Available cash</span>
         </div>
 
@@ -310,7 +310,7 @@
             <div class="summary-card-header">
                 <div>
                     <span class="summary-label">INCOME</span>
-                    <h3>Rs. 325,800</h3>
+                    <h3 id="dashTotalIncome">Rs. 0</h3>
                 </div>
 
                 <div class="summary-icon income-icon">
@@ -321,11 +321,11 @@
             <div class="progress-area">
                 <div class="progress-info">
                     <span>This Month</span>
-                    <strong>+14.8%</strong>
+                    <strong id="incomePercentText">0%</strong>
                 </div>
 
                 <div class="progress-bar">
-                    <span style="width: 78%;"></span>
+                    <span id="incomeProgressBar" style="width: 0%;"></span>
                 </div>
             </div>
         </div>
@@ -335,7 +335,7 @@
             <div class="summary-card-header">
                 <div>
                     <span class="summary-label">EXPENSES</span>
-                    <h3>Rs. 148,650</h3>
+                    <h3 id="dashTotalExpenses">Rs. 0</h3>
                 </div>
 
                 <div class="summary-icon expense-icon">
@@ -346,11 +346,11 @@
             <div class="progress-area">
                 <div class="progress-info">
                     <span>This Month</span>
-                    <strong>-6.3%</strong>
+                    <strong id="expensePercentText">0%</strong>
                 </div>
 
                 <div class="progress-bar">
-                    <span style="width: 52%;"></span>
+                    <span id="expenseProgressBar" style="width: 0%;"></span>
                 </div>
             </div>
         </div>
@@ -641,6 +641,7 @@
                     <div class="form-group">
                         <label for="transParty">Party / Name</label>
                         <input type="text" id="transParty" class="form-control" placeholder="e.g. Ahmed Traders" required>
+                        <div class="invalid-feedback"><i class="fas fa-circle-exclamation"></i> Invalid Party / Name</div>
                     </div>
 
                     <div class="form-group">
@@ -681,8 +682,18 @@
                     </div>
 
                     <div class="form-group full-width">
-                        <label for="transRef">Reference / Invoice #</label>
-                        <input type="text" id="transRef" class="form-control" placeholder="e.g. INV-1026">
+                        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 6px;">
+                            <label for="transRef" style="margin: 0; font-weight: 600;">Reference / Invoice #</label>
+                            <span style="font-size: 11px; color: var(--success); font-weight: 600; display: inline-flex; align-items: center; gap: 4px;">
+                                <i class="fas fa-wand-magic-sparkles"></i> Auto Generated
+                            </span>
+                        </div>
+                        <div class="input-with-icon" style="position: relative;">
+                            <input type="text" id="transRef" class="form-control" placeholder="e.g. INV-1026" style="padding-right: 38px; font-weight: 600; color: var(--primary);">
+                            <button type="button" class="toggle-password-btn regenerate-ref-btn" title="Generate New Number" style="color: var(--primary);">
+                                <i class="fas fa-arrows-rotate"></i>
+                            </button>
+                        </div>
                     </div>
 
                 </div>
@@ -713,6 +724,63 @@
 </div>
 
 <!-- =========================================
+     SYSTEM LOGIN / AUTHENTICATION MODAL
+========================================= -->
+<div class="modal-overlay" id="loginModalOverlay">
+    <div class="modal-card" style="max-width: 440px;">
+        <div class="modal-header" style="text-align: center; justify-content: center; position: relative;">
+            <div style="text-align: center; width: 100%;">
+                <div class="logo-icon" style="margin: 0 auto 10px; width: 48px; height: 48px; background: var(--primary); color: white; border-radius: 12px; display: flex; align-items: center; justify-content: center; font-size: 22px;">
+                    <i class="fas fa-user-lock"></i>
+                </div>
+                <h3 style="font-size: 20px; font-weight: 700; color: var(--text-dark); margin: 0;">System Authentication</h3>
+                <p style="font-size: 13px; color: var(--text-medium); margin: 4px 0 0;">Enter valid User ID / Name and Password to sign in</p>
+            </div>
+        </div>
+        <form id="loginForm" novalidate>
+            <div class="modal-body" style="padding: 20px 24px;">
+                <div class="form-group full-width" style="margin-bottom: 16px;">
+                    <label for="loginUserId" style="font-weight: 600;">User ID / Name</label>
+                    <div class="input-with-icon">
+                        <i class="fas fa-user input-icon"></i>
+                        <input type="text" id="loginUserId" class="form-control" placeholder="Enter User ID or Name" required autocomplete="username">
+                    </div>
+                    <div class="invalid-feedback" id="loginUserIdError">
+                        <i class="fas fa-circle-exclamation"></i> Invalid User ID / Name
+                    </div>
+                </div>
+
+                <div class="form-group full-width" style="margin-bottom: 16px;">
+                    <label for="loginPassword" style="font-weight: 600;">Password</label>
+                    <div class="input-with-icon password-input-wrapper">
+                        <i class="fas fa-key input-icon"></i>
+                        <input type="password" id="loginPassword" class="form-control" placeholder="Enter Password" required autocomplete="current-password">
+                        <button type="button" class="toggle-password-btn" title="Show/Hide Password">
+                            <i class="fas fa-eye"></i>
+                        </button>
+                    </div>
+                    <div class="invalid-feedback" id="loginPasswordError">
+                        <i class="fas fa-circle-exclamation"></i> Invalid Password
+                    </div>
+                </div>
+
+                <div style="display: flex; justify-content: space-between; align-items: center; font-size: 12px; color: var(--text-medium); margin-top: 8px;">
+                    <label style="display: flex; align-items: center; gap: 6px; cursor: pointer; font-weight: normal; margin: 0;">
+                        <input type="checkbox" id="rememberMeCheck" checked style="accent-color: var(--primary);"> Remember Me
+                    </label>
+                    <span style="color: var(--primary); cursor: pointer; font-weight: 600;" id="demoCredentialsHint">Demo Credentials?</span>
+                </div>
+            </div>
+            <div class="modal-footer" style="padding: 16px 24px; background: #f8fafc;">
+                <button type="submit" class="btn-primary" style="width: 100%; justify-content: center; padding: 12px; font-size: 14px; font-weight: 600; display: flex; align-items: center; gap: 8px;">
+                    <i class="fas fa-right-to-bracket"></i> Log In
+                </button>
+            </div>
+        </form>
+    </div>
+</div>
+
+<!-- =========================================
      ADMIN PROFILE SETTINGS MODAL
 ========================================= -->
 <div class="modal-overlay" id="profileSettingsModal">
@@ -721,16 +789,25 @@
             <h3>System & Profile Settings</h3>
             <button class="modal-close-btn" id="closeProfileModalBtn"><i class="fas fa-xmark"></i></button>
         </div>
-        <form id="profileSettingsForm">
+        <form id="profileSettingsForm" novalidate>
             <div class="modal-body">
                 <div class="form-grid">
                     <div class="form-group full-width">
-                        <label for="adminNameInput">Full Name</label>
-                        <input type="text" id="adminNameInput" class="form-control" value="Admin User" required>
+                        <label for="adminNameInput">User ID / Full Name</label>
+                        <input type="text" id="adminNameInput" class="form-control" value="Muhammad Rehan" required>
+                        <div class="invalid-feedback"><i class="fas fa-circle-exclamation"></i> Invalid User ID / Name</div>
+                    </div>
+                    <div class="form-group full-width">
+                        <label for="adminPasswordInput">Password</label>
+                        <div class="password-input-wrapper">
+                            <input type="password" id="adminPasswordInput" class="form-control" value="admin123" required>
+                            <button type="button" class="toggle-password-btn" title="Show/Hide Password"><i class="fas fa-eye"></i></button>
+                        </div>
+                        <div class="invalid-feedback"><i class="fas fa-circle-exclamation"></i> Invalid Password</div>
                     </div>
                     <div class="form-group full-width">
                         <label for="adminEmailInput">Email Address</label>
-                        <input type="email" id="adminEmailInput" class="form-control" value="admin@accountex.com" required>
+                        <input type="email" id="adminEmailInput" class="form-control" value="rehan@accountex.com" required>
                     </div>
                     <div class="form-group">
                         <label for="adminRoleInput">Role</label>
@@ -757,7 +834,7 @@
             </div>
             <div class="modal-footer">
                 <button type="button" class="btn-secondary" id="cancelProfileModalBtn">Cancel</button>
-                <button type="submit" class="btn-primary">Save Changes</button>
+                <button type="submit" class="btn-primary" onclick="closeProfileModal()">Save Changes</button>
             </div>
         </form>
     </div>
@@ -817,7 +894,7 @@
             </div>
         </div>
         <div class="modal-footer">
-            <button type="button" class="btn-secondary" id="clearActivityLogBtn"><i class="fas fa-trash-can" style="margin-right: 6px;"></i> Clear Log</button>
+            <button type="button" class="btn-secondary" id="clearActivityLogBtn" onclick="clearActivityLog()"><i class="fas fa-trash-can" style="margin-right: 6px;"></i> Clear Log</button>
             <button type="button" class="btn-primary" id="closeActivityModalFooterBtn">Close</button>
         </div>
     </div>
