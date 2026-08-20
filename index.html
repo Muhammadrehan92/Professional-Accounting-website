@@ -152,31 +152,12 @@
             <div class="notification-dropdown" id="notificationDropdown">
                 <div class="dropdown-header">
                     <h4>Notifications</h4>
-                    <button class="mark-read-btn" id="markReadBtn">Mark all as read</button>
-                </div>
-                <div class="notification-list">
-                    <div class="notification-item" data-id="1" data-link="pages/invoices.html" data-title="Overdue Payment Alert" data-msg="Invoice #INV-1021 for Muhammad Store amounting to Rs. 32,000 is 7 days past due. Please review or issue a payment reminder." data-type="warning" data-time="10 minutes ago">
-                        <div class="notification-icon warning"><i class="fas fa-triangle-exclamation"></i></div>
-                        <div class="notification-content">
-                            <p><strong>Overdue Payment:</strong> Muhammad Store (INV-1021) is 7 days overdue.</p>
-                            <span>10 minutes ago</span>
-                        </div>
-                    </div>
-                    <div class="notification-item" data-id="2" data-link="pages/receivable.html" data-title="Payment Received Confirmation" data-msg="Payment of Rs. 45,000 has been successfully received from Ahmed Traders for Invoice #INV-1025 and recorded in Cash Book." data-type="success" data-time="2 hours ago">
-                        <div class="notification-icon success"><i class="fas fa-circle-check"></i></div>
-                        <div class="notification-content">
-                            <p><strong>Payment Received:</strong> Rs. 45,000 received from Ahmed Traders.</p>
-                            <span>2 hours ago</span>
-                        </div>
-                    </div>
-                    <div class="notification-item" data-id="3" data-link="pages/payable.html" data-title="New Vendor Bill Recorded" data-msg="New purchase bill #BILL-784 from Al-Noor Suppliers for Rs. 18,500 has been entered. Due date: 25 August 2026." data-type="info" data-time="Yesterday">
-                        <div class="notification-icon info"><i class="fas fa-file-invoice"></i></div>
-                        <div class="notification-content">
-                            <p><strong>New Bill Added:</strong> BILL-784 from Al-Noor Suppliers.</p>
-                            <span>Yesterday</span>
-                        </div>
+                    <div style="display: flex; gap: 8px; align-items: center;">
+                        <button class="mark-read-btn" id="markReadBtn">Mark all as read</button>
+                        <button class="mark-read-btn clear-notif-btn" id="clearNotifBtn" style="color: #ef4444;">Clear</button>
                     </div>
                 </div>
+                <div class="notification-list" id="notificationList"></div>
             </div>
         </div>
 

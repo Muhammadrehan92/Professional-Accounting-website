@@ -144,6 +144,177 @@ const searchableData = [
     { title: "Invoice #INV-1025", category: "Invoice", link: "invoices.html", icon: "fa-file-invoice-dollar" }
 ];
 
+// =========================================
+// DYNAMIC NOTIFICATION SYSTEM (PER USER ID)
+// =========================================
+
+function getUserNotificationsKey() {
+    return `accountex_notifications_${getUserKey()}`;
+}
+
+function getDefaultNotifications(userName) {
+    return [
+        {
+            id: "notif_1",
+            title: "Account Session Active",
+            msg: `User account session active for User ID: ${userName}. All accounting records synchronized.`,
+            summary: `<strong>Account Active:</strong> Logged in as ${userName}.`,
+            type: "info",
+            icon: "fa-user-check",
+            time: "Just now",
+            link: "index.html",
+            read: false
+        }
+    ];
+}
+
+function getUserNotifications() {
+    const key = getUserNotificationsKey();
+    try {
+        const saved = localStorage.getItem(key);
+        if (saved !== null) {
+            return JSON.parse(saved);
+        }
+    } catch (e) {}
+    const defaults = getDefaultNotifications(getActiveUserName());
+    localStorage.setItem(key, JSON.stringify(defaults));
+    return defaults;
+}
+
+function saveUserNotifications(notifications) {
+    const key = getUserNotificationsKey();
+    localStorage.setItem(key, JSON.stringify(notifications));
+}
+
+function addNotification(title, msg, type = "info", icon = "fa-bell", link = "index.html") {
+    const notifications = getUserNotifications();
+    const userName = getActiveUserName();
+    const newNotif = {
+        id: "notif_" + Date.now() + "_" + Math.floor(Math.random() * 1000),
+        title: title,
+        msg: msg,
+        summary: `<strong>${title}:</strong> ${msg}`,
+        type: type,
+        icon: icon,
+        time: "Just now",
+        link: link,
+        read: false
+    };
+    notifications.unshift(newNotif);
+    saveUserNotifications(notifications);
+    renderUserNotifications();
+}
+
+function escapeHtml(str) {
+    if (!str) return '';
+    return String(str)
+        .replace(/&/g, '&amp;')
+        .replace(/</g, '&lt;')
+        .replace(/>/g, '&gt;')
+        .replace(/"/g, '&quot;')
+        .replace(/'/g, '&#039;');
+}
+
+function renderUserNotifications() {
+    const notifLists = document.querySelectorAll(".notification-list");
+    if (!notifLists || notifLists.length === 0) return;
+
+    const notifications = getUserNotifications();
+    const userName = getActiveUserName();
+    const unreadCount = notifications.filter(n => !n.read).length;
+
+    const notificationDot = document.getElementById("notificationDot");
+    if (notificationDot) {
+        notificationDot.style.display = unreadCount > 0 ? "block" : "none";
+    }
+
+    notifLists.forEach(container => {
+        if (!notifications || notifications.length === 0) {
+            container.innerHTML = `
+                <div style="padding: 24px 16px; text-align: center; color: var(--text-medium); font-size: 13px;">
+                    <i class="fas fa-bell-slash" style="font-size: 24px; color: var(--text-muted); margin-bottom: 8px; display: block;"></i>
+                    <strong style="color: var(--text-dark); display: block; margin-bottom: 2px;">No notifications</strong>
+                    <span>Notification history clear for <strong>${userName}</strong>.</span>
+                </div>`;
+            return;
+        }
+
+        let html = "";
+        notifications.forEach(item => {
+            const isRead = item.read ? "read" : "";
+            const iconClass = item.icon || (item.type === "warning" ? "fa-triangle-exclamation" : item.type === "success" ? "fa-circle-check" : "fa-circle-info");
+            html += `
+                <div class="notification-item ${isRead}" data-id="${item.id}" data-link="${item.link || '#'}" data-title="${escapeHtml(item.title)}" data-msg="${escapeHtml(item.msg)}" data-type="${item.type}" data-time="${item.time}">
+                    <div class="notification-icon ${item.type}"><i class="fas ${iconClass}"></i></div>
+                    <div class="notification-content">
+                        <p>${item.summary}</p>
+                        <span>${item.time}</span>
+                    </div>
+                </div>
+            `;
+        });
+        container.innerHTML = html;
+    });
+
+    // Re-bind click handlers for notification items
+    document.querySelectorAll(".notification-item").forEach(item => {
+        item.onclick = (e) => {
+            e.stopPropagation();
+            const id = item.dataset.id;
+            
+            // Mark this item as read
+            const allNotifs = getUserNotifications();
+            const targetNotif = allNotifs.find(n => n.id === id);
+            if (targetNotif) {
+                targetNotif.read = true;
+                saveUserNotifications(allNotifs);
+            }
+            item.classList.add("read");
+
+            const notificationDropdown = document.getElementById("notificationDropdown");
+            if (notificationDropdown) notificationDropdown.classList.remove("active");
+
+            const title = item.dataset.title || "Notification Alert";
+            const msg = item.dataset.msg || "";
+            const time = item.dataset.time || "";
+            const type = item.dataset.type || "info";
+            const rawLink = item.dataset.link || "index.html";
+
+            const isSubpage = window.location.pathname.includes("/pages/");
+            let finalLink = rawLink;
+            if (isSubpage) {
+                finalLink = rawLink.startsWith("pages/") ? rawLink.replace("pages/", "") : rawLink;
+            } else {
+                finalLink = rawLink.startsWith("pages/") ? rawLink : "pages/" + rawLink;
+            }
+
+            const notifModalTitle = document.getElementById("notifModalTitle");
+            const notifModalTime = document.getElementById("notifModalTime");
+            const notifModalMsg = document.getElementById("notifModalMsg");
+            const notifModalIcon = document.getElementById("notifModalIcon");
+            const notifModalLinkBtn = document.getElementById("notifModalLinkBtn");
+            const notificationDetailModal = document.getElementById("notificationDetailModal");
+
+            if (notifModalTitle) notifModalTitle.textContent = title;
+            if (notifModalTime) notifModalTime.textContent = time;
+            if (notifModalMsg) notifModalMsg.textContent = msg;
+
+            if (notifModalIcon) {
+                const iconEl = item.querySelector(".notification-icon i")?.cloneNode(true) || document.createElement("i");
+                notifModalIcon.className = `notification-icon ${type}`;
+                notifModalIcon.innerHTML = "";
+                notifModalIcon.appendChild(iconEl);
+            }
+
+            if (notifModalLinkBtn) notifModalLinkBtn.href = finalLink;
+
+            if (notificationDetailModal) notificationDetailModal.classList.add("active");
+
+            renderUserNotifications();
+        };
+    });
+}
+
 // Toggle Notifications Dropdown
 if (notificationBtn && notificationDropdown) {
     notificationBtn.addEventListener("click", (e) => {
@@ -153,64 +324,31 @@ if (notificationBtn && notificationDropdown) {
     });
 }
 
-// Mark all notifications read
-if (markReadBtn) {
-    markReadBtn.addEventListener("click", () => {
-        if (notificationDot) notificationDot.style.display = "none";
-        document.querySelectorAll(".notification-item").forEach(item => item.classList.add("read"));
-        showToast("All notifications marked as read.", "info");
-    });
-}
-
-// Click individual Notification Item -> Open Detail Modal
-const notificationItems = document.querySelectorAll(".notification-item");
-
-notificationItems.forEach(item => {
-    item.addEventListener("click", (e) => {
+// Mark all notifications read / Clear notifications
+document.addEventListener("click", (e) => {
+    const markReadBtn = e.target.closest("#markReadBtn");
+    if (markReadBtn) {
         e.stopPropagation();
+        const notifications = getUserNotifications();
+        notifications.forEach(n => n.read = true);
+        saveUserNotifications(notifications);
+        renderUserNotifications();
+        showToast("All notifications marked as read.", "info");
+    }
 
-        item.classList.add("read");
-        if (notificationDropdown) notificationDropdown.classList.remove("active");
-
-        const title = item.dataset.title || item.querySelector("strong")?.textContent || "Notification Alert";
-        const msg = item.dataset.msg || item.querySelector("p")?.textContent || "";
-        const time = item.dataset.time || item.querySelector("span")?.textContent || "";
-        const type = item.dataset.type || "info";
-        const rawLink = item.dataset.link || "invoices.html";
-
-        const isSubpage = window.location.pathname.includes("/pages/");
-        let finalLink = rawLink;
-        if (isSubpage) {
-            finalLink = rawLink.startsWith("pages/") ? rawLink.replace("pages/", "") : rawLink;
-        } else {
-            finalLink = rawLink.startsWith("pages/") ? rawLink : "pages/" + rawLink;
-        }
-
-        if (notifModalTitle) notifModalTitle.textContent = title;
-        if (notifModalTime) notifModalTime.textContent = time;
-        if (notifModalMsg) notifModalMsg.textContent = msg;
-
-        if (notifModalIcon) {
-            const iconEl = item.querySelector(".notification-icon i")?.cloneNode(true) || document.createElement("i");
-            notifModalIcon.className = `notification-icon ${type}`;
-            notifModalIcon.innerHTML = "";
-            notifModalIcon.appendChild(iconEl);
-        }
-
-        if (notifModalLinkBtn) {
-            notifModalLinkBtn.href = finalLink;
-        }
-
-        if (notificationDetailModal) {
-            notificationDetailModal.classList.add("active");
-        }
-
-        const unreadItems = document.querySelectorAll(".notification-item:not(.read)");
-        if (unreadItems.length === 0 && notificationDot) {
-            notificationDot.style.display = "none";
-        }
-    });
+    const clearNotifBtn = e.target.closest("#clearNotifBtn, .clear-notif-btn");
+    if (clearNotifBtn) {
+        e.stopPropagation();
+        window.clearUserNotifications();
+    }
 });
+
+window.clearUserNotifications = function() {
+    const userName = getActiveUserName();
+    saveUserNotifications([]);
+    renderUserNotifications();
+    showToast(`Notification history cleared for active user "${userName}".`, "info");
+};
 
 function closeNotifDetailModal() {
     if (notificationDetailModal) {
@@ -508,6 +646,13 @@ function loadSavedProfile() {
         const passwordInput = document.getElementById("adminPasswordInput");
         if (passwordInput && data.password) {
             passwordInput.value = data.password;
+        }
+
+        if (typeof renderUserNotifications === "function") {
+            renderUserNotifications();
+        }
+        if (typeof renderActivityLogs === "function") {
+            renderActivityLogs();
         }
     } catch (e) {
         console.error("Error loading active user profile", e);
@@ -856,9 +1001,9 @@ function getDefaultActivities(userName) {
     return [
         {
             type: "success",
-            icon: "fa-circle-check",
-            title: "Payment Received Confirmation",
-            desc: `${userName} recorded payment of Rs. 45,000 received from Ahmed Traders for Invoice #INV-1025.`,
+            icon: "fa-user-check",
+            title: "User Account Active",
+            desc: `User session active for User ID: "${userName}".`,
             time: "Today, 2:30 PM"
         },
         {
@@ -869,25 +1014,11 @@ function getDefaultActivities(userName) {
             time: "Today, 11:15 AM"
         },
         {
-            type: "warning",
-            icon: "fa-file-invoice",
-            title: "Vendor Bill Recorded",
-            desc: `${userName} entered purchase bill #BILL-784 for Rs. 18,500 from Al-Noor Suppliers.`,
-            time: "Yesterday, 5:40 PM"
-        },
-        {
             type: "info",
             icon: "fa-sliders",
             title: "Theme Preference Updated",
             desc: `${userName} updated system UI theme preferences.`,
             time: "Yesterday, 3:20 PM"
-        },
-        {
-            type: "primary",
-            icon: "fa-print",
-            title: "Report Exported",
-            desc: `${userName} generated and exported Executive Financial Summary Report.`,
-            time: "16 Aug 2026, 10:00 AM"
         }
     ];
 }
