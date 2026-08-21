@@ -1,0 +1,478 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>User Management & Employees | Professional Accounting System</title>
+
+    <!-- Google Font -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+
+    <!-- Font Awesome -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.7.2/css/all.min.css">
+
+    <!-- Main CSS -->
+    <link rel="stylesheet" href="../css/style.css">
+    <!-- User Management Page CSS -->
+    <link rel="stylesheet" href="../css/users.css">
+</head>
+<body>
+
+<!-- SIDEBAR -->
+<aside class="sidebar" id="sidebar">
+
+    <div class="sidebar-logo">
+        <div class="logo-icon">
+            <i class="fas fa-calculator"></i>
+        </div>
+        <div class="logo-text">
+            <strong>Accountex</strong>
+            <span>Accounting System</span>
+        </div>
+    </div>
+
+    <nav class="sidebar-nav">
+
+        <span class="nav-title">MAIN MENU</span>
+
+        <a href="../index.html" class="nav-link">
+            <i class="fas fa-house"></i>
+            <span>Dashboard</span>
+        </a>
+
+        <a href="ledger.html" class="nav-link">
+            <i class="fas fa-book"></i>
+            <span>Ledger</span>
+        </a>
+
+        <a href="receivable.html" class="nav-link">
+            <i class="fas fa-arrow-down"></i>
+            <span>Receivable</span>
+        </a>
+
+        <a href="payable.html" class="nav-link">
+            <i class="fas fa-arrow-up"></i>
+            <span>Payable</span>
+        </a>
+
+        <a href="cashbook.html" class="nav-link">
+            <i class="fas fa-cash-register"></i>
+            <span>Cash Book</span>
+        </a>
+
+        <span class="nav-title">BUSINESS</span>
+
+        <a href="invoices.html" class="nav-link">
+            <i class="fas fa-file-invoice"></i>
+            <span>Invoices</span>
+        </a>
+
+        <a href="customers.html" class="nav-link">
+            <i class="fas fa-users"></i>
+            <span>Customers</span>
+        </a>
+
+        <a href="suppliers.html" class="nav-link">
+            <i class="fas fa-truck"></i>
+            <span>Suppliers</span>
+        </a>
+
+        <span class="nav-title">FINANCE</span>
+
+        <a href="income-expense.html" class="nav-link">
+            <i class="fas fa-chart-line"></i>
+            <span>Income & Expense</span>
+        </a>
+
+        <a href="reports.html" class="nav-link">
+            <i class="fas fa-chart-column"></i>
+            <span>Reports</span>
+        </a>
+
+        <span class="nav-title" id="adminNavHeader">ADMINISTRATION</span>
+
+        <a href="users.html" class="nav-link active" id="navUsersLink">
+            <i class="fas fa-users-gear"></i>
+            <span>User Management</span>
+        </a>
+
+    </nav>
+
+    <div class="sidebar-bottom">
+
+        <a href="#" class="nav-link">
+            <i class="fas fa-gear"></i>
+            <span>Settings</span>
+        </a>
+
+        <div class="sidebar-user">
+            <div class="user-avatar">MR</div>
+            <div class="user-info">
+                <strong id="sidebarUserName">Muhammad Rehan</strong>
+                <span id="sidebarUserRole">Admin</span>
+            </div>
+        </div>
+
+    </div>
+
+</aside>
+
+
+<!-- TOPBAR -->
+<header class="topbar">
+
+    <div class="topbar-left">
+
+        <button class="menu-toggle" id="menuToggle">
+            <i class="fas fa-bars"></i>
+        </button>
+
+        <div class="page-title">
+            <span>System Administration</span>
+            <strong>User & Employee Management</strong>
+        </div>
+
+    </div>
+
+    <div class="topbar-right">
+
+        <button class="topbar-btn" id="searchToggleBtn" title="Search (Ctrl + K)">
+            <i class="fas fa-search"></i>
+        </button>
+
+        <div class="notification-wrapper">
+            <button class="topbar-btn notification-btn" id="notificationBtn">
+                <i class="far fa-bell"></i>
+                <span class="notification-dot" id="notificationDot"></span>
+            </button>
+
+            <div class="notification-dropdown" id="notificationDropdown">
+                <div class="dropdown-header">
+                    <h4>Notifications</h4>
+                    <div style="display: flex; gap: 8px; align-items: center;">
+                        <button class="mark-read-btn" id="markReadBtn">Mark all as read</button>
+                        <button class="mark-read-btn clear-notif-btn" id="clearNotifBtn" style="color: #ef4444;">Clear</button>
+                    </div>
+                </div>
+                <div class="notification-list" id="notificationList"></div>
+            </div>
+        </div>
+
+        <div class="topbar-profile-wrapper">
+            <div class="topbar-profile" id="profileDropdownBtn" style="cursor: pointer;">
+                <div class="profile-avatar">MR</div>
+                <div class="profile-info">
+                    <strong id="adminUserNameDisplay">Muhammad Rehan</strong>
+                    <span id="topbarUserRoleDisplay" class="user-role-badge badge-admin">Admin</span>
+                </div>
+                <i class="fas fa-chevron-down"></i>
+            </div>
+
+            <div class="profile-dropdown-menu" id="profileDropdownMenu">
+                <div class="profile-dropdown-header">
+                    <strong id="adminMenuName">Muhammad Rehan</strong>
+                    <span id="adminMenuEmail">rehan@accountex.com</span>
+                    <div style="margin-top: 4px; display: flex; gap: 6px; align-items: center;">
+                        <span id="adminUserIdBadge" class="user-id-code">USER-001</span>
+                        <span id="adminMenuRoleBadge" class="user-role-badge badge-admin">Admin</span>
+                    </div>
+                </div>
+                <div class="profile-menu-list">
+                    <div class="profile-menu-item" id="openProfileModalBtn">
+                        <i class="fas fa-user-gear"></i> Profile Settings
+                    </div>
+                    <div class="profile-menu-item" id="openActivityBtn">
+                        <i class="fas fa-list-check"></i> Activity Log
+                    </div>
+                    <div class="profile-menu-item logout" id="logoutBtn">
+                        <i class="fas fa-right-from-bracket"></i> Log Out
+                    </div>
+                </div>
+            </div>
+        </div>
+
+    </div>
+
+</header>
+
+
+<!-- MAIN CONTENT -->
+<main class="dashboard-main">
+
+    <!-- Header Section -->
+    <section class="dashboard-header">
+        <div>
+            <span class="dashboard-label">EMPLOYEE ACCOUNTS & ROLES</span>
+            <h1>User Management</h1>
+            <p>Manage system users, employee IDs, access roles, and security permissions.</p>
+        </div>
+
+        <button class="add-transaction-btn" id="addEmployeeBtn">
+            <i class="fas fa-user-plus"></i>
+            Add Employee
+        </button>
+    </section>
+
+    <!-- User Statistics Cards -->
+    <section class="users-stats-grid">
+
+        <div class="users-stat-card">
+            <div class="users-stat-icon icon-total">
+                <i class="fas fa-users-viewfinder"></i>
+            </div>
+            <div class="users-stat-info">
+                <h3 id="statTotalUsers">0</h3>
+                <p>Total Users</p>
+            </div>
+        </div>
+
+        <div class="users-stat-card">
+            <div class="users-stat-icon icon-active">
+                <i class="fas fa-user-check"></i>
+            </div>
+            <div class="users-stat-info">
+                <h3 id="statActiveUsers">0</h3>
+                <p>Active Employees</p>
+            </div>
+        </div>
+
+        <div class="users-stat-card">
+            <div class="users-stat-icon icon-inactive">
+                <i class="fas fa-user-xmark"></i>
+            </div>
+            <div class="users-stat-info">
+                <h3 id="statInactiveUsers">0</h3>
+                <p>Inactive Accounts</p>
+            </div>
+        </div>
+
+        <div class="users-stat-card">
+            <div class="users-stat-icon icon-admin">
+                <i class="fas fa-user-shield"></i>
+            </div>
+            <div class="users-stat-info">
+                <h3 id="statAdminCount">0</h3>
+                <p>Admins</p>
+            </div>
+        </div>
+
+        <div class="users-stat-card">
+            <div class="users-stat-icon icon-accountant">
+                <i class="fas fa-calculator"></i>
+            </div>
+            <div class="users-stat-info">
+                <h3 id="statAccountantCount">0</h3>
+                <p>Accountants</p>
+            </div>
+        </div>
+
+        <div class="users-stat-card">
+            <div class="users-stat-icon icon-viewer">
+                <i class="fas fa-eye"></i>
+            </div>
+            <div class="users-stat-info">
+                <h3 id="statViewerCount">0</h3>
+                <p>Viewers</p>
+            </div>
+        </div>
+
+    </section>
+
+
+    <!-- Controls & Filters Bar -->
+    <section class="users-controls-bar">
+
+        <div class="users-search-box">
+            <i class="fas fa-search"></i>
+            <input type="text" id="userSearchInput" placeholder="Search by User ID, Name, or Email...">
+        </div>
+
+        <div class="users-filters">
+            <select id="userRoleFilter">
+                <option value="all">All Roles</option>
+                <option value="Admin">Admin</option>
+                <option value="Accountant">Accountant</option>
+                <option value="Viewer">Viewer</option>
+            </select>
+
+            <select id="userStatusFilter">
+                <option value="all">All Statuses</option>
+                <option value="Active">Active</option>
+                <option value="Inactive">Inactive</option>
+            </select>
+        </div>
+
+    </section>
+
+
+    <!-- Users Directory Table -->
+    <section class="transactions-card">
+
+        <div class="transactions-table-wrapper">
+
+            <table class="transactions-table" id="usersTable">
+
+                <thead>
+                    <tr>
+                        <th>User ID</th>
+                        <th>Employee Name</th>
+                        <th>Email Address</th>
+                        <th>Phone Number</th>
+                        <th>Role</th>
+                        <th>Status</th>
+                        <th>Created Date</th>
+                        <th style="text-align: right;">Actions</th>
+                    </tr>
+                </thead>
+
+                <tbody id="usersTableBody">
+                    <!-- Populated dynamically via script.js -->
+                </tbody>
+
+            </table>
+
+        </div>
+
+    </section>
+
+</main>
+
+
+<!-- ADD / EDIT EMPLOYEE MODAL -->
+<div class="modal-overlay" id="userModalOverlay" style="display: none;">
+    <div class="modal-card" style="max-width: 540px;">
+        <div class="modal-header">
+            <div>
+                <h3 id="userModalTitle" style="font-size: 18px; font-weight: 700; color: var(--text-dark); margin: 0;">Add New Employee</h3>
+                <p style="font-size: 13px; color: var(--text-medium); margin: 2px 0 0;">Create employee account with unique User ID and Role</p>
+            </div>
+            <button class="close-btn" id="closeUserModalBtn">&times;</button>
+        </div>
+
+        <form id="userForm">
+            <div class="modal-body" style="padding: 20px 24px;">
+                
+                <input type="hidden" id="userFormMode" value="add">
+                <input type="hidden" id="userFormOriginalId" value="">
+
+                <div class="modal-grid-2">
+                    <div class="form-group">
+                        <label for="empUserId" style="font-weight: 600;">User ID (Auto-Generated)</label>
+                        <input type="text" id="empUserId" class="form-control" readonly style="background: #f1f5f9; font-weight: 700; font-family: monospace;">
+                    </div>
+
+                    <div class="form-group">
+                        <label for="empStatus" style="font-weight: 600;">Account Status *</label>
+                        <select id="empStatus" class="form-control" required>
+                            <option value="Active">Active</option>
+                            <option value="Inactive">Inactive</option>
+                        </select>
+                    </div>
+                </div>
+
+                <div class="form-group" style="margin-top: 12px;">
+                    <label for="empName" style="font-weight: 600;">Employee Name *</label>
+                    <input type="text" id="empName" class="form-control" placeholder="e.g. Usman Ali" required>
+                </div>
+
+                <div class="modal-grid-2" style="margin-top: 12px;">
+                    <div class="form-group">
+                        <label for="empEmail" style="font-weight: 600;">Email Address *</label>
+                        <input type="email" id="empEmail" class="form-control" placeholder="usman@example.com" required>
+                    </div>
+
+                    <div class="form-group">
+                        <label for="empPhone" style="font-weight: 600;">Phone Number</label>
+                        <input type="tel" id="empPhone" class="form-control" placeholder="0300 1234567">
+                    </div>
+                </div>
+
+                <div class="form-group" style="margin-top: 12px;">
+                    <label for="empRole" style="font-weight: 600;">Access Role *</label>
+                    <select id="empRole" class="form-control" required>
+                        <option value="Accountant">Accountant (Transactions & Financial Management)</option>
+                        <option value="Viewer">Viewer (Read-Only Access)</option>
+                        <option value="Admin">Admin (Full Access & User Management)</option>
+                    </select>
+                </div>
+
+                <div class="modal-grid-2" style="margin-top: 12px;" id="passwordFieldsGroup">
+                    <div class="form-group">
+                        <label for="empPassword" style="font-weight: 600;">Password *</label>
+                        <input type="password" id="empPassword" class="form-control" placeholder="Enter password" required>
+                    </div>
+
+                    <div class="form-group">
+                        <label for="empConfirmPassword" style="font-weight: 600;">Confirm Password *</label>
+                        <input type="password" id="empConfirmPassword" class="form-control" placeholder="Confirm password" required>
+                    </div>
+                </div>
+
+            </div>
+
+            <div class="modal-footer" style="padding: 16px 24px; background: #f8fafc; display: flex; justify-content: flex-end; gap: 10px;">
+                <button type="button" class="btn-secondary" id="cancelUserModalBtn">Cancel</button>
+                <button type="submit" class="btn-primary" id="saveUserBtn">
+                    <i class="fas fa-check"></i> Save Account
+                </button>
+            </div>
+        </form>
+    </div>
+</div>
+
+<!-- VIEW EMPLOYEE DETAILS MODAL -->
+<div class="modal-overlay" id="viewUserModalOverlay" style="display: none;">
+    <div class="modal-card" style="max-width: 480px;">
+        <div class="modal-header">
+            <h3>Employee Profile Details</h3>
+            <button class="close-btn" id="closeViewUserModalBtn">&times;</button>
+        </div>
+
+        <div class="modal-body" style="padding: 24px;">
+            <div style="text-align: center; margin-bottom: 20px;">
+                <div id="viewUserAvatar" class="user-avatar-bubble" style="width: 60px; height: 60px; font-size: 20px; margin: 0 auto 10px;">MR</div>
+                <h3 id="viewUserName" style="margin: 0; font-size: 18px; color: var(--text-dark);">Muhammad Rehan</h3>
+                <span id="viewUserId" class="user-id-code" style="margin-top: 4px; display: inline-block;">USER-001</span>
+            </div>
+
+            <div style="display: flex; flex-direction: column; gap: 12px; font-size: 14px; background: #f8fafc; padding: 16px; border-radius: 10px;">
+                <div style="display: flex; justify-content: space-between;">
+                    <span style="color: var(--text-medium);">Email:</span>
+                    <strong id="viewUserEmail">rehan@accountex.com</strong>
+                </div>
+                <div style="display: flex; justify-content: space-between;">
+                    <span style="color: var(--text-medium);">Phone:</span>
+                    <strong id="viewUserPhone">03001234567</strong>
+                </div>
+                <div style="display: flex; justify-content: space-between; align-items: center;">
+                    <span style="color: var(--text-medium);">Role:</span>
+                    <span id="viewUserRoleBadge" class="user-role-badge badge-admin">Admin</span>
+                </div>
+                <div style="display: flex; justify-content: space-between; align-items: center;">
+                    <span style="color: var(--text-medium);">Account Status:</span>
+                    <span id="viewUserStatusBadge" class="status-badge active"><span class="dot"></span> Active</span>
+                </div>
+                <div style="display: flex; justify-content: space-between;">
+                    <span style="color: var(--text-medium);">Created Date:</span>
+                    <strong id="viewUserCreated">2026-08-21</strong>
+                </div>
+            </div>
+        </div>
+
+        <div class="modal-footer" style="padding: 14px 24px; background: #f8fafc; text-align: right;">
+            <button type="button" class="btn-secondary" id="closeViewUserModalFooterBtn">Close</button>
+        </div>
+    </div>
+</div>
+
+
+<!-- Toast Container -->
+<div id="toastContainer" class="toast-container"></div>
+
+<!-- Main Script -->
+<script src="../js/script.js"></script>
+
+</body>
+</html>

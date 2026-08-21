@@ -542,127 +542,301 @@ document.addEventListener("click", (e) => {
 // MULTI-USER SYSTEM & DATA ISOLATION LAYER
 // =========================================
 
-function getUsersDB() {
-    try {
-        const stored = localStorage.getItem("accountexUsersDB");
-        if (stored) return JSON.parse(stored);
-    } catch (e) {}
+// =========================================
+// MODULAR AUTHENTICATION & MULTI-USER ENGINE
+// =========================================
 
-    const defaultDB = {
-        "muhammad rehan": { name: "Muhammad Rehan", email: "rehan@accountex.com", phone: "+92 300 9876543", password: "admin123" },
-        "admin user": { name: "Admin User", email: "admin@accountex.com", phone: "+92 300 1234567", password: "admin123" },
-        "admin": { name: "Admin User", email: "admin@accountex.com", phone: "+92 300 1234567", password: "admin123" }
-    };
-    localStorage.setItem("accountexUsersDB", JSON.stringify(defaultDB));
-    return defaultDB;
-}
+const authService = {
+    USERS_KEY: "accountex_users_db",
+    SESSION_KEY: "accountex_current_user",
+    LOGGED_IN_KEY: "accountexIsLoggedIn",
 
-function saveUserToDB(name, password, email = "", phone = "") {
-    const db = getUsersDB();
-    const cleanName = name.trim();
-    const key = cleanName.toLowerCase();
-    const existing = db[key] || {};
-    const userObj = {
-        name: cleanName,
-        email: email || existing.email || `${key.replace(/[^a-z0-9]/g, "")}@accountex.com`,
-        phone: phone || existing.phone || "+92 300 9876543",
-        password: password || existing.password || "admin123"
-    };
+    getDefaultUsers() {
+        return [
+            {
+                id: "USER-001",
+                name: "Muhammad Rehan",
+                email: "rehan@accountex.com",
+                phone: "03009876543",
+                password: "admin123",
+                role: "Admin",
+                status: "Active",
+                createdAt: "2026-08-21T12:00:00.000Z"
+            },
+            {
+                id: "USER-002",
+                name: "Admin User",
+                email: "admin@accountex.com",
+                phone: "03001234567",
+                password: "admin123",
+                role: "Admin",
+                status: "Active",
+                createdAt: "2026-08-21T12:00:00.000Z"
+            },
+            {
+                id: "USER-003",
+                name: "Lead Accountant",
+                email: "accountant@accountex.com",
+                phone: "03005551122",
+                password: "acc123",
+                role: "Accountant",
+                status: "Active",
+                createdAt: "2026-08-21T12:00:00.000Z"
+            },
+            {
+                id: "USER-004",
+                name: "Financial Viewer",
+                email: "viewer@accountex.com",
+                phone: "03005553344",
+                password: "view123",
+                role: "Viewer",
+                status: "Active",
+                createdAt: "2026-08-21T12:00:00.000Z"
+            }
+        ];
+    },
 
-    db[key] = userObj;
-    localStorage.setItem("accountexUsersDB", JSON.stringify(db));
-    localStorage.setItem("accountexLoggedInUser", cleanName);
-    localStorage.setItem("accountexProfile", JSON.stringify(userObj));
-    return userObj;
-}
+    getUsers() {
+        try {
+            const stored = localStorage.getItem(this.USERS_KEY);
+            if (stored) {
+                const parsed = JSON.parse(stored);
+                if (Array.isArray(parsed) && parsed.length > 0) return parsed;
+            }
 
-function getActiveUserName() {
-    try {
-        const loggedIn = localStorage.getItem("accountexLoggedInUser");
-        if (loggedIn && loggedIn.trim()) return loggedIn.trim();
+            // Legacy Migration Check
+            let list = this.getDefaultUsers();
+            const legacyStored = localStorage.getItem("accountexUsersDB");
 
-        const saved = localStorage.getItem("accountexProfile");
-        if (saved) {
-            const data = JSON.parse(saved);
-            if (data.name && data.name.trim()) return data.name.trim();
+            if (legacyStored) {
+                try {
+                    const legacyObj = JSON.parse(legacyStored);
+                    Object.keys(legacyObj).forEach(k => {
+                        const u = legacyObj[k];
+                        if (u && u.name) {
+                            const exists = list.some(x => 
+                                x.name.toLowerCase() === u.name.toLowerCase() || 
+                                (u.email && x.email.toLowerCase() === u.email.toLowerCase())
+                            );
+                            if (!exists) {
+                                const nextId = this.generateNextUserId(list);
+                                list.push({
+                                    id: nextId,
+                                    name: u.name,
+                                    email: u.email || `${u.name.toLowerCase().replace(/[^a-z0-9]/g, "")}@accountex.com`,
+                                    phone: u.phone || "+92 300 1234567",
+                                    password: u.password || "admin123",
+                                    role: u.role || "Admin",
+                                    status: u.status || "Active",
+                                    createdAt: u.createdAt || new Date().toISOString()
+                                });
+                            }
+                        }
+                    });
+                } catch (e) {}
+            }
+
+            localStorage.setItem(this.USERS_KEY, JSON.stringify(list));
+            return list;
+        } catch (e) {
+            console.error("Error reading users DB", e);
+            return this.getDefaultUsers();
         }
-    } catch (e) {}
-    return "Muhammad Rehan";
-}
+    },
 
-function getUserKey() {
-    return getActiveUserName().toLowerCase().trim().replace(/[^a-z0-9]/g, "_");
-}
-
-function getUserRecordsKey() {
-    return `accountex_records_${getUserKey()}`;
-}
-
-function getUserActivitiesKey() {
-    return `accountex_activities_${getUserKey()}`;
-}
-
-function getSavedProfile() {
-    const activeName = getActiveUserName();
-    const db = getUsersDB();
-    const userObj = db[activeName.toLowerCase().trim()];
-    if (userObj) return userObj;
-
-    try {
-        const saved = localStorage.getItem("accountexProfile");
-        if (saved) {
-            const data = JSON.parse(saved);
-            if (data.name) return data;
+    saveUsers(users) {
+        localStorage.setItem(this.USERS_KEY, JSON.stringify(users));
+        if (typeof renderUsersPage === "function") {
+            renderUsersPage();
         }
-    } catch (e) {}
+    },
 
-    return { name: activeName, email: `${getUserKey()}@accountex.com`, phone: "+92 300 9876543", password: "admin123" };
-}
+    generateNextUserId(existingUsers) {
+        const users = existingUsers || this.getUsers();
+        let maxNum = 0;
+        users.forEach(u => {
+            if (u.id) {
+                const match = u.id.match(/USER-(\d+)/i);
+                if (match && match[1]) {
+                    const num = parseInt(match[1], 10);
+                    if (!isNaN(num) && num > maxNum) maxNum = num;
+                }
+            }
+        });
+        const nextNum = maxNum + 1;
+        return `USER-${String(nextNum).padStart(3, '0')}`;
+    },
 
-function loadSavedProfile() {
-    const data = getSavedProfile();
-    try {
-        if (data.name) {
-            document.querySelectorAll("#adminUserNameDisplay, #adminMenuName, .profile-info strong, .sidebar-user strong").forEach(el => {
-                el.textContent = data.name;
-            });
-            const initials = data.name.split(" ").map(n => n[0]).filter(Boolean).join("").toUpperCase().substring(0, 2);
-            document.querySelectorAll(".profile-avatar, .user-avatar").forEach(el => {
-                el.textContent = initials || "MR";
-            });
-            const nameInput = document.getElementById("adminNameInput");
-            if (nameInput) nameInput.value = data.name;
-        }
-        if (data.email) {
-            const emailSpan = document.querySelector(".profile-dropdown-header span");
-            if (emailSpan) emailSpan.textContent = data.email;
-            const emailInput = document.getElementById("adminEmailInput");
-            if (emailInput) emailInput.value = data.email;
-        }
-        if (data.phone) {
-            const phoneInput = document.getElementById("adminPhoneInput");
-            if (phoneInput) phoneInput.value = data.phone;
-        }
-        const passwordInput = document.getElementById("adminPasswordInput");
-        if (passwordInput && data.password) {
-            passwordInput.value = data.password;
+    findUser(query) {
+        if (!query) return null;
+        const q = query.trim().toLowerCase();
+        const users = this.getUsers();
+        return users.find(u => 
+            u.id.toLowerCase() === q || 
+            u.email.toLowerCase() === q || 
+            u.name.toLowerCase() === q
+        ) || null;
+    },
+
+    getCurrentUser() {
+        try {
+            const sessionData = localStorage.getItem(this.SESSION_KEY);
+            if (sessionData) {
+                const user = JSON.parse(sessionData);
+                if (user && user.id) return user;
+            }
+        } catch (e) {}
+
+        const activeName = localStorage.getItem("accountexLoggedInUser") || "Muhammad Rehan";
+        const found = this.findUser(activeName);
+        if (found) {
+            this.setCurrentUser(found);
+            return found;
         }
 
-        if (typeof renderUserNotifications === "function") {
-            renderUserNotifications();
+        const defaultAdmin = this.getUsers()[0];
+        this.setCurrentUser(defaultAdmin);
+        return defaultAdmin;
+    },
+
+    setCurrentUser(user) {
+        localStorage.setItem(this.SESSION_KEY, JSON.stringify(user));
+        localStorage.setItem("accountexLoggedInUser", user.name);
+        localStorage.setItem("accountexProfile", JSON.stringify(user));
+        localStorage.setItem(this.LOGGED_IN_KEY, "true");
+        this.updateUI();
+    },
+
+    logout() {
+        localStorage.setItem(this.LOGGED_IN_KEY, "false");
+        localStorage.removeItem(this.SESSION_KEY);
+        showLoginModal();
+        showToast("Logged out successfully.", "info");
+    },
+
+    isLoggedIn() {
+        return localStorage.getItem(this.LOGGED_IN_KEY) === "true";
+    },
+
+    hasRole(roles) {
+        const user = this.getCurrentUser();
+        if (!user) return false;
+        if (Array.isArray(roles)) return roles.includes(user.role);
+        return user.role === roles;
+    },
+
+    hasPermission(action) {
+        const user = this.getCurrentUser();
+        if (!user || user.status === "Inactive") return false;
+        
+        if (user.role === "Admin") return true;
+
+        if (user.role === "Accountant") {
+            if (action === "manage_users" || action === "edit_user" || action === "delete_user") return false;
+            return true;
         }
-        if (typeof renderActivityLogs === "function") {
-            renderActivityLogs();
+
+        if (user.role === "Viewer") {
+            if (action.startsWith("view_") || action === "view") return true;
+            return false;
         }
-    } catch (e) {
-        console.error("Error loading active user profile", e);
+
+        return false;
+    },
+
+    updateUI() {
+        const user = this.getCurrentUser();
+        if (!user) return;
+
+        // Topbar & Sidebar Elements
+        document.querySelectorAll("#adminUserNameDisplay, #adminMenuName, #sidebarUserName, .profile-info strong, .sidebar-user strong").forEach(el => {
+            el.textContent = user.name;
+        });
+
+        // User Avatar Initials
+        const initials = user.name.split(" ").map(n => n[0]).filter(Boolean).join("").toUpperCase().substring(0, 2) || "MR";
+        document.querySelectorAll(".profile-avatar, .user-avatar").forEach(el => {
+            el.textContent = initials;
+        });
+
+        // Email Displays
+        const emailSpan = document.getElementById("adminMenuEmail") || document.querySelector(".profile-dropdown-header span");
+        if (emailSpan) emailSpan.textContent = user.email;
+
+        // User ID Badges
+        document.querySelectorAll("#adminUserIdBadge, #adminUserIdDisplay").forEach(el => {
+            el.textContent = user.id;
+        });
+
+        // Role Badges
+        document.querySelectorAll("#sidebarUserRole, #topbarUserRoleDisplay, #adminMenuRoleBadge, #adminUserRoleDisplay").forEach(el => {
+            el.textContent = user.role;
+            if (el.classList.contains("user-role-badge")) {
+                el.className = `user-role-badge badge-${user.role.toLowerCase()}`;
+            }
+        });
+
+        // Toggle Sidebar Users Nav Link
+        const adminNavHeader = document.getElementById("adminNavHeader");
+        const navUsersLink = document.getElementById("navUsersLink");
+        if (user.role === "Admin") {
+            if (adminNavHeader) adminNavHeader.style.display = "";
+            if (navUsersLink) navUsersLink.style.display = "";
+        } else {
+            if (adminNavHeader) adminNavHeader.style.display = "none";
+            if (navUsersLink) navUsersLink.style.display = "none";
+        }
+
+        // Apply Viewer Body Class for CSS Mutation Hiding
+        if (user.role === "Viewer") {
+            document.body.classList.add("is-viewer");
+        } else {
+            document.body.classList.remove("is-viewer");
+        }
     }
+};
+
+// Legacy Compatibility Helpers
+function getUsersDB() { return authService.getUsers(); }
+function saveUserToDB(name, password, email, phone) {
+    const users = authService.getUsers();
+    const cleanName = name.trim();
+    let existing = users.find(u => u.name.toLowerCase() === cleanName.toLowerCase());
+    if (existing) {
+        existing.password = password || existing.password;
+        if (email) existing.email = email;
+        if (phone) existing.phone = phone;
+        authService.saveUsers(users);
+        authService.setCurrentUser(existing);
+        return existing;
+    }
+
+    const newUser = {
+        id: authService.generateNextUserId(users),
+        name: cleanName,
+        email: email || `${cleanName.toLowerCase().replace(/[^a-z0-9]/g, "")}@accountex.com`,
+        phone: phone || "+92 300 1234567",
+        password,
+        role: "Admin",
+        status: "Active",
+        createdAt: new Date().toISOString()
+    };
+    users.push(newUser);
+    authService.saveUsers(users);
+    authService.setCurrentUser(newUser);
+    return newUser;
 }
+function getActiveUserName() { return authService.getCurrentUser().name; }
+function getUserKey() { return authService.getCurrentUser().id.toLowerCase(); }
+function getUserRecordsKey() { return "accountex_custom_records"; }
+function getUserActivitiesKey() { return `accountex_activities_${authService.getCurrentUser().id.toLowerCase()}`; }
+function getSavedProfile() { return authService.getCurrentUser(); }
+function loadSavedProfile() { authService.updateUI(); }
 
 if (document.readyState === "loading") {
-    document.addEventListener("DOMContentLoaded", loadSavedProfile);
+    document.addEventListener("DOMContentLoaded", () => authService.updateUI());
 } else {
-    loadSavedProfile();
+    authService.updateUI();
 }
 
 // =========================================
@@ -683,19 +857,19 @@ function ensureLoginModal() {
                             <i class="fas fa-user-lock"></i>
                         </div>
                         <h3 style="font-size: 20px; font-weight: 700; color: var(--text-dark); margin: 0;">System Authentication</h3>
-                        <p style="font-size: 13px; color: var(--text-medium); margin: 4px 0 0;">Enter valid User ID / Name and Password to sign in</p>
+                        <p style="font-size: 13px; color: var(--text-medium); margin: 4px 0 0;">Enter valid User ID / Email and Password to sign in</p>
                     </div>
                 </div>
                 <form id="loginForm" novalidate>
                     <div class="modal-body" style="padding: 20px 24px;">
                         <div class="form-group full-width" style="margin-bottom: 16px;">
-                            <label for="loginUserId" style="font-weight: 600;">User ID / Name</label>
+                            <label for="loginUserId" style="font-weight: 600;">User ID / Email / Name</label>
                             <div class="input-with-icon">
                                 <i class="fas fa-user input-icon"></i>
-                                <input type="text" id="loginUserId" class="form-control" placeholder="Enter User ID or Name" required autocomplete="username">
+                                <input type="text" id="loginUserId" class="form-control" placeholder="e.g. USER-001 or admin@accountex.com" required autocomplete="username">
                             </div>
                             <div class="invalid-feedback" id="loginUserIdError">
-                                <i class="fas fa-circle-exclamation"></i> Invalid User ID / Name
+                                <i class="fas fa-circle-exclamation"></i> Invalid User ID or Email
                             </div>
                         </div>
 
@@ -734,12 +908,7 @@ function ensureLoginModal() {
 }
 
 function isUserLoggedIn() {
-    const status = localStorage.getItem("accountexIsLoggedIn");
-    if (status === null) {
-        localStorage.setItem("accountexIsLoggedIn", "true");
-        return true;
-    }
-    return status === "true";
+    return authService.isLoggedIn();
 }
 
 function showLoginModal() {
@@ -749,13 +918,13 @@ function showLoginModal() {
         modal.classList.add("active");
         const userIdInput = document.getElementById("loginUserId");
         const passInput = document.getElementById("loginPassword");
-        const profile = getSavedProfile();
+        const user = authService.getCurrentUser();
 
         if (userIdInput) {
-            userIdInput.value = profile.name || getActiveUserName();
+            userIdInput.value = user ? user.id : "USER-001";
         }
-        if (passInput && profile.password) {
-            passInput.value = profile.password;
+        if (passInput && user) {
+            passInput.value = user.password || "admin123";
         }
 
         setTimeout(() => {
@@ -781,12 +950,11 @@ function setupLoginModalEvents() {
 
     if (demoHint) {
         demoHint.addEventListener("click", () => {
-            const profile = getSavedProfile();
             const uIn = document.getElementById("loginUserId");
             const pIn = document.getElementById("loginPassword");
-            if (uIn) uIn.value = profile.name;
-            if (pIn) pIn.value = profile.password;
-            showToast(`User ID: "${profile.name}" | Password: "${profile.password}"`, "info");
+            if (uIn) uIn.value = "USER-001";
+            if (pIn) pIn.value = "admin123";
+            showToast("Demo Admin Credentials: User ID 'USER-001' | Password 'admin123'", "info");
         });
     }
 
@@ -806,13 +974,13 @@ function setupLoginModalEvents() {
         loginForm.onsubmit = function (e) {
             e.preventDefault();
 
-            const enteredUserId = (userIdInput ? userIdInput.value : "").trim();
+            const enteredQuery = (userIdInput ? userIdInput.value : "").trim();
             const enteredPassword = (passwordInput ? passwordInput.value : "").trim();
 
-            if (!enteredUserId || enteredUserId.length < 2) {
+            if (!enteredQuery || enteredQuery.length < 2) {
                 if (userIdInput) userIdInput.classList.add("is-invalid");
                 if (userIdError) userIdError.style.display = "flex";
-                showToast("Please enter a valid User ID / Name.", "error");
+                showToast("Please enter a valid User ID or Email.", "error");
                 return;
             }
 
@@ -823,34 +991,39 @@ function setupLoginModalEvents() {
                 return;
             }
 
-            const db = getUsersDB();
-            const userKey = enteredUserId.toLowerCase();
-            const existingUser = db[userKey];
+            const matchedUser = authService.findUser(enteredQuery);
 
-            if (existingUser) {
-                // Verify existing password
-                if (enteredPassword !== existingUser.password) {
-                    if (passwordInput) passwordInput.classList.add("is-invalid");
-                    if (passwordError) passwordError.style.display = "flex";
-                    showToast("Invalid Password for user ID '" + enteredUserId + "'.", "error");
-                    return;
-                }
-            } else {
-                // Register new user dynamically
-                saveUserToDB(enteredUserId, enteredPassword);
+            if (!matchedUser) {
+                if (userIdInput) userIdInput.classList.add("is-invalid");
+                if (userIdError) userIdError.style.display = "flex";
+                showToast(`User ID or Email '${enteredQuery}' not found.`, "error");
+                return;
             }
 
-            // Set active logged-in user
-            localStorage.setItem("accountexLoggedInUser", enteredUserId);
-            localStorage.setItem("accountexIsLoggedIn", "true");
+            // Check Account Status
+            if (matchedUser.status === "Inactive") {
+                showToast("Your account is inactive. Please contact the administrator.", "error");
+                addActivityLog("Login Rejected", `Inactive account login attempt for User ID "${matchedUser.id}".`, "error", "fa-user-xmark");
+                return;
+            }
+
+            // Check Password
+            if (enteredPassword !== matchedUser.password) {
+                if (passwordInput) passwordInput.classList.add("is-invalid");
+                if (passwordError) passwordError.style.display = "flex";
+                showToast("Invalid password entered.", "error");
+                return;
+            }
+
+            // Successful Login
+            authService.setCurrentUser(matchedUser);
             hideLoginModal();
 
-            loadSavedProfile();
-            refreshUserRecordsTable();
-            renderActivityLogs();
+            if (typeof refreshUserRecordsTable === "function") refreshUserRecordsTable();
+            if (typeof renderActivityLogs === "function") renderActivityLogs();
 
-            showToast(`Welcome back, ${enteredUserId}! Signed into your personal account.`, "success");
-            addActivityLog("User Authentication", `User ID "${enteredUserId}" signed into personal account.`, "success", "fa-user-check");
+            showToast(`Welcome back, ${matchedUser.name}! (${matchedUser.role} - ${matchedUser.id})`, "success");
+            addActivityLog("User Authentication", `User "${matchedUser.name}" (${matchedUser.id}) logged in.`, "success", "fa-user-check");
         };
     }
 }
@@ -1409,43 +1582,55 @@ const LOCAL_STORAGE_KEY = "accountex_custom_records";
 
 function getSavedRecords() {
     try {
-        const key = getUserRecordsKey();
-        const activeUser = getActiveUserName().toLowerCase().trim();
-        const isPrimaryAdmin = (activeUser === "muhammad rehan" || activeUser === "admin user" || activeUser === "admin");
+        const primaryKey = "accountex_custom_records";
+        let stored = localStorage.getItem(primaryKey);
 
-        const stored = localStorage.getItem(key);
         if (stored) {
-            const parsed = JSON.parse(stored);
-            // If non-primary second user has default 2 demo items copied previously, clear them to return clean []
-            if (!isPrimaryAdmin && Array.isArray(parsed) && parsed.length === 2 && parsed[0].ref === "INV-1025" && parsed[1].ref === "BILL-784" && !parsed[0].isCustom) {
-                localStorage.setItem(key, JSON.stringify([]));
-                return [];
-            }
-            return parsed;
+            try {
+                const parsed = JSON.parse(stored);
+                if (Array.isArray(parsed) && parsed.length > 0) return parsed;
+            } catch (e) {}
         }
 
-        // Default sample records ONLY for primary demo account
-        if (isPrimaryAdmin) {
-            const initialDefault = [
-                { id: "1", party: "Ahmed Traders", type: "income", category: "Sales", amount: 45000, dateRaw: "2026-08-17", status: "paid", ref: "INV-1025" },
-                { id: "2", party: "Al-Noor Suppliers", type: "expense", category: "Purchase", amount: 18500, dateRaw: "2026-08-16", status: "pending", ref: "BILL-784" }
-            ];
-            localStorage.setItem(key, JSON.stringify(initialDefault));
-            return initialDefault;
+        // Fallback migration check for legacy user keys
+        const legacyKey = "accountex_records_muhammad_rehan";
+        stored = localStorage.getItem(legacyKey);
+
+        if (stored) {
+            try {
+                const parsed = JSON.parse(stored);
+                if (Array.isArray(parsed) && parsed.length > 0) {
+                    localStorage.setItem(primaryKey, JSON.stringify(parsed));
+                    return parsed;
+                }
+            } catch (e) {}
         }
 
-        // For any second user or new user account, return clean empty list []
-        return [];
+        // Default sample accounting records (Company-wide)
+        const initialDefault = [
+            { id: "1", party: "Ahmed Traders", type: "income", category: "Sales", amount: 45000, dateRaw: "2026-08-17", status: "paid", ref: "INV-1025", createdById: "USER-001", createdBy: "Muhammad Rehan" },
+            { id: "2", party: "Al-Noor Suppliers", type: "expense", category: "Purchase", amount: 18500, dateRaw: "2026-08-16", status: "pending", ref: "BILL-784", createdById: "USER-001", createdBy: "Muhammad Rehan" }
+        ];
+        localStorage.setItem(primaryKey, JSON.stringify(initialDefault));
+        return initialDefault;
     } catch (e) {
-        console.error("Error reading user records", e);
+        console.error("Error reading shared company records", e);
         return [];
     }
 }
 
 function saveRecord(record) {
-    const key = getUserRecordsKey();
+    const currentUser = authService.getCurrentUser();
+    if (!authService.hasPermission("create_transaction")) {
+        showToast("Permission Denied: Viewer accounts cannot create or modify transactions.", "error");
+        return;
+    }
+
+    const key = "accountex_custom_records";
     const records = getSavedRecords();
-    record.userId = getActiveUserName();
+    record.createdById = currentUser.id;
+    record.createdBy = currentUser.name;
+    record.userId = currentUser.id;
     record.isCustom = true;
     records.unshift(record);
     localStorage.setItem(key, JSON.stringify(records));
@@ -2017,6 +2202,12 @@ if (addTransactionForm) {
     addTransactionForm.addEventListener("submit", (e) => {
         e.preventDefault();
 
+        if (!authService.hasPermission("create_transaction")) {
+            showToast("Permission Denied: Viewer accounts have read-only access.", "error");
+            closeModal();
+            return;
+        }
+
         const partyInput = document.getElementById("transParty");
         const party = partyInput ? partyInput.value.trim() : "";
         const type = document.getElementById("transType")?.value || "expense";
@@ -2069,4 +2260,388 @@ if (addTransactionForm) {
         autoFillBillNumber();
         showToast(`Record for "${party}" (${ref}) saved successfully!`, "success");
     });
+}
+
+
+// =========================================
+// USER MANAGEMENT PAGE CONTROLLER & RBAC UI
+// =========================================
+
+function renderUsersPage() {
+    const tableBody = document.getElementById("usersTableBody");
+    if (!tableBody) return; // Not on users.html page
+
+    // Check Admin Access Guard
+    if (!authService.hasRole("Admin")) {
+        showToast("Access Denied: Admin privileges required to view User Management.", "error");
+        setTimeout(() => {
+            window.location.href = "../index.html";
+        }, 1200);
+        return;
+    }
+
+    const users = authService.getUsers();
+    const searchVal = (document.getElementById("userSearchInput")?.value || "").trim().toLowerCase();
+    const roleFilter = document.getElementById("userRoleFilter")?.value || "all";
+    const statusFilter = document.getElementById("userStatusFilter")?.value || "all";
+
+    // 1. Calculate & Update Statistics
+    const totalUsers = users.length;
+    const activeUsers = users.filter(u => u.status === "Active").length;
+    const inactiveUsers = users.filter(u => u.status === "Inactive").length;
+    const adminCount = users.filter(u => u.role === "Admin").length;
+    const accountantCount = users.filter(u => u.role === "Accountant").length;
+    const viewerCount = users.filter(u => u.role === "Viewer").length;
+
+    const elTotal = document.getElementById("statTotalUsers");
+    const elActive = document.getElementById("statActiveUsers");
+    const elInactive = document.getElementById("statInactiveUsers");
+    const elAdmin = document.getElementById("statAdminCount");
+    const elAccountant = document.getElementById("statAccountantCount");
+    const elViewer = document.getElementById("statViewerCount");
+
+    if (elTotal) elTotal.textContent = totalUsers;
+    if (elActive) elActive.textContent = activeUsers;
+    if (elInactive) elInactive.textContent = inactiveUsers;
+    if (elAdmin) elAdmin.textContent = adminCount;
+    if (elAccountant) elAccountant.textContent = accountantCount;
+    if (elViewer) elViewer.textContent = viewerCount;
+
+    // 2. Filter Users List
+    const filtered = users.filter(user => {
+        const matchesSearch = !searchVal || 
+            user.id.toLowerCase().includes(searchVal) ||
+            user.name.toLowerCase().includes(searchVal) ||
+            user.email.toLowerCase().includes(searchVal) ||
+            (user.phone && user.phone.includes(searchVal));
+
+        const matchesRole = roleFilter === "all" || user.role === roleFilter;
+        const matchesStatus = statusFilter === "all" || user.status === statusFilter;
+
+        return matchesSearch && matchesRole && matchesStatus;
+    });
+
+    // 3. Render Users Table Rows
+    tableBody.innerHTML = "";
+
+    if (filtered.length === 0) {
+        tableBody.innerHTML = `
+            <tr>
+                <td colspan="8" style="text-align: center; padding: 40px; color: var(--text-medium);">
+                    <i class="fas fa-user-slash" style="font-size: 32px; margin-bottom: 10px; color: #cbd5e1; display: block;"></i>
+                    No employee accounts match your current filters.
+                </td>
+            </tr>
+        `;
+        return;
+    }
+
+    const currentUser = authService.getCurrentUser();
+
+    filtered.forEach(user => {
+        const tr = document.createElement("tr");
+        const initials = user.name.split(" ").map(n => n[0]).filter(Boolean).join("").toUpperCase().substring(0, 2) || "MR";
+        const createdDate = user.createdAt ? new Date(user.createdAt).toLocaleDateString("en-GB", { day: "2-digit", month: "short", year: "numeric" }) : "Today";
+        const isCurrentAdmin = (user.id === currentUser.id);
+
+        tr.innerHTML = `
+            <td><span class="user-id-code">${escapeHtml(user.id)}</span></td>
+            <td>
+                <div class="user-avatar-cell">
+                    <div class="user-avatar-bubble">${initials}</div>
+                    <div class="user-cell-meta">
+                        <strong>${escapeHtml(user.name)} ${isCurrentAdmin ? '<span style="font-size: 10px; color: #4f46e5; font-weight: bold;">(You)</span>' : ''}</strong>
+                        <span>ID: ${escapeHtml(user.id)}</span>
+                    </div>
+                </div>
+            </td>
+            <td>${escapeHtml(user.email)}</td>
+            <td>${escapeHtml(user.phone || "—")}</td>
+            <td><span class="user-role-badge badge-${user.role.toLowerCase()}">${escapeHtml(user.role)}</span></td>
+            <td>
+                <span class="status-badge ${user.status.toLowerCase()}">
+                    <span class="dot"></span> ${escapeHtml(user.status)}
+                </span>
+            </td>
+            <td>${createdDate}</td>
+            <td style="text-align: right;">
+                <div class="action-btns-cell" style="justify-content: flex-end;">
+                    <button type="button" class="btn-icon-action btn-view-user" data-id="${user.id}" title="View Details">
+                        <i class="fas fa-eye"></i>
+                    </button>
+                    <button type="button" class="btn-icon-action btn-edit-user" data-id="${user.id}" title="Edit User">
+                        <i class="fas fa-pen-to-square"></i>
+                    </button>
+                    <button type="button" class="btn-icon-action btn-toggle-status ${isCurrentAdmin ? 'role-disabled' : ''}" data-id="${user.id}" title="${user.status === 'Active' ? 'Deactivate Account' : 'Activate Account'}" ${isCurrentAdmin ? 'disabled' : ''}>
+                        <i class="fas ${user.status === 'Active' ? 'fa-user-minus' : 'fa-user-check'}"></i>
+                    </button>
+                    ${!isCurrentAdmin ? `
+                        <button type="button" class="btn-icon-action btn-delete-user" data-id="${user.id}" title="Delete User">
+                            <i class="fas fa-trash-can"></i>
+                        </button>
+                    ` : ''}
+                </div>
+            </td>
+        `;
+        tableBody.appendChild(tr);
+    });
+}
+
+// User Management Modal Actions
+function openAddUserModal() {
+    const modal = document.getElementById("userModalOverlay");
+    if (!modal) return;
+
+    document.getElementById("userModalTitle").textContent = "Add New Employee";
+    document.getElementById("userFormMode").value = "add";
+    document.getElementById("userFormOriginalId").value = "";
+
+    const users = authService.getUsers();
+    document.getElementById("empUserId").value = authService.generateNextUserId(users);
+    document.getElementById("empName").value = "";
+    document.getElementById("empEmail").value = "";
+    document.getElementById("empPhone").value = "";
+    document.getElementById("empRole").value = "Accountant";
+    document.getElementById("empStatus").value = "Active";
+    document.getElementById("empPassword").value = "";
+    document.getElementById("empConfirmPassword").value = "";
+
+    modal.style.display = "flex";
+}
+
+function openEditUserModal(userId) {
+    const user = authService.findUser(userId);
+    if (!user) return;
+
+    const modal = document.getElementById("userModalOverlay");
+    if (!modal) return;
+
+    document.getElementById("userModalTitle").textContent = `Edit Employee (${user.id})`;
+    document.getElementById("userFormMode").value = "edit";
+    document.getElementById("userFormOriginalId").value = user.id;
+
+    document.getElementById("empUserId").value = user.id;
+    document.getElementById("empName").value = user.name;
+    document.getElementById("empEmail").value = user.email;
+    document.getElementById("empPhone").value = user.phone || "";
+    document.getElementById("empRole").value = user.role;
+    document.getElementById("empStatus").value = user.status;
+    document.getElementById("empPassword").value = user.password;
+    document.getElementById("empConfirmPassword").value = user.password;
+
+    modal.style.display = "flex";
+}
+
+function openViewUserModal(userId) {
+    const user = authService.findUser(userId);
+    if (!user) return;
+
+    const modal = document.getElementById("viewUserModalOverlay");
+    if (!modal) return;
+
+    const initials = user.name.split(" ").map(n => n[0]).filter(Boolean).join("").toUpperCase().substring(0, 2) || "MR";
+    document.getElementById("viewUserAvatar").textContent = initials;
+    document.getElementById("viewUserName").textContent = user.name;
+    document.getElementById("viewUserId").textContent = user.id;
+    document.getElementById("viewUserEmail").textContent = user.email;
+    document.getElementById("viewUserPhone").textContent = user.phone || "N/A";
+    
+    const roleBadge = document.getElementById("viewUserRoleBadge");
+    if (roleBadge) {
+        roleBadge.textContent = user.role;
+        roleBadge.className = `user-role-badge badge-${user.role.toLowerCase()}`;
+    }
+
+    const statusBadge = document.getElementById("viewUserStatusBadge");
+    if (statusBadge) {
+        statusBadge.className = `status-badge ${user.status.toLowerCase()}`;
+        statusBadge.innerHTML = `<span class="dot"></span> ${user.status}`;
+    }
+
+    document.getElementById("viewUserCreated").textContent = user.createdAt ? new Date(user.createdAt).toLocaleDateString("en-GB") : "Today";
+
+    modal.style.display = "flex";
+}
+
+function closeUserModals() {
+    const userModal = document.getElementById("userModalOverlay");
+    const viewModal = document.getElementById("viewUserModalOverlay");
+    if (userModal) userModal.style.display = "none";
+    if (viewModal) viewModal.style.display = "none";
+}
+
+// User Management Event Listeners & Delegations
+document.addEventListener("click", (e) => {
+    // Add Employee button
+    if (e.target.closest("#addEmployeeBtn")) {
+        e.preventDefault();
+        openAddUserModal();
+        return;
+    }
+
+    // Modal Close buttons
+    if (e.target.closest("#closeUserModalBtn, #cancelUserModalBtn, #closeViewUserModalBtn, #closeViewUserModalFooterBtn")) {
+        e.preventDefault();
+        closeUserModals();
+        return;
+    }
+
+    // View User button
+    const viewBtn = e.target.closest(".btn-view-user");
+    if (viewBtn) {
+        e.preventDefault();
+        openViewUserModal(viewBtn.dataset.id);
+        return;
+    }
+
+    // Edit User button
+    const editBtn = e.target.closest(".btn-edit-user");
+    if (editBtn) {
+        e.preventDefault();
+        openEditUserModal(editBtn.dataset.id);
+        return;
+    }
+
+    // Toggle Status button
+    const toggleBtn = e.target.closest(".btn-toggle-status");
+    if (toggleBtn) {
+        e.preventDefault();
+        const userId = toggleBtn.dataset.id;
+        const currentUser = authService.getCurrentUser();
+        if (userId === currentUser.id) {
+            showToast("You cannot deactivate your own active Admin account.", "error");
+            return;
+        }
+
+        const users = authService.getUsers();
+        const user = users.find(u => u.id === userId);
+        if (user) {
+            user.status = (user.status === "Active") ? "Inactive" : "Active";
+            authService.saveUsers(users);
+            showToast(`User ${user.name} (${user.id}) status set to ${user.status}.`, "info");
+            addActivityLog("User Status Changed", `Admin changed status of ${user.id} to ${user.status}.`, "info", "fa-user-gear");
+        }
+        return;
+    }
+
+    // Delete User button
+    const deleteBtn = e.target.closest(".btn-delete-user");
+    if (deleteBtn) {
+        e.preventDefault();
+        const userId = deleteBtn.dataset.id;
+        const currentUser = authService.getCurrentUser();
+        if (userId === currentUser.id) {
+            showToast("You cannot delete your currently logged-in Admin account.", "error");
+            return;
+        }
+
+        if (confirm(`Are you sure you want to delete user account "${userId}"?`)) {
+            let users = authService.getUsers();
+            const targetUser = users.find(u => u.id === userId);
+            users = users.filter(u => u.id !== userId);
+            authService.saveUsers(users);
+            showToast(`User account ${userId} deleted.`, "success");
+            addActivityLog("User Deleted", `Admin deleted account ${targetUser ? targetUser.name : userId}.`, "warning", "fa-user-minus");
+        }
+        return;
+    }
+});
+
+// User Form Submission Handler
+document.addEventListener("submit", (e) => {
+    if (e.target && e.target.id === "userForm") {
+        e.preventDefault();
+
+        const mode = document.getElementById("userFormMode").value;
+        const userId = document.getElementById("empUserId").value.trim();
+        const name = document.getElementById("empName").value.trim();
+        const email = document.getElementById("empEmail").value.trim();
+        const phone = document.getElementById("empPhone").value.trim();
+        const role = document.getElementById("empRole").value;
+        const status = document.getElementById("empStatus").value;
+        const password = document.getElementById("empPassword").value.trim();
+        const confirmPassword = document.getElementById("empConfirmPassword").value.trim();
+
+        if (!name || name.length < 2) {
+            showToast("Please enter a valid employee name.", "error");
+            return;
+        }
+
+        if (!email || !email.includes("@")) {
+            showToast("Please enter a valid email address.", "error");
+            return;
+        }
+
+        if (!password) {
+            showToast("Please enter a valid password.", "error");
+            return;
+        }
+
+        if (password !== confirmPassword) {
+            showToast("Passwords do not match. Please verify.", "error");
+            return;
+        }
+
+        const users = authService.getUsers();
+
+        // Check Email Uniqueness
+        const existingEmailUser = users.find(u => u.email.toLowerCase() === email.toLowerCase() && u.id !== userId);
+        if (existingEmailUser) {
+            showToast(`Email address '${email}' is already registered for user ${existingEmailUser.id}.`, "error");
+            return;
+        }
+
+        if (mode === "add") {
+            const newUser = {
+                id: userId,
+                name,
+                email,
+                phone,
+                password,
+                role,
+                status,
+                createdAt: new Date().toISOString()
+            };
+            users.push(newUser);
+            authService.saveUsers(users);
+            showToast(`Employee account created for ${name} (${userId})!`, "success");
+            addActivityLog("Employee Created", `Admin created user ${userId} (${name} - ${role}).`, "success", "fa-user-plus");
+        } else {
+            const user = users.find(u => u.id === userId);
+            if (user) {
+                user.name = name;
+                user.email = email;
+                user.phone = phone;
+                user.role = role;
+                user.status = status;
+                user.password = password;
+                authService.saveUsers(users);
+                showToast(`Employee details updated for ${userId}!`, "success");
+                addActivityLog("Employee Updated", `Admin updated profile for user ${userId}.`, "info", "fa-user-gear");
+            }
+        }
+
+        closeUserModals();
+        renderUsersPage();
+    }
+});
+
+// User Search & Filters Event Listeners
+document.addEventListener("input", (e) => {
+    if (e.target && e.target.id === "userSearchInput") {
+        renderUsersPage();
+    }
+});
+
+document.addEventListener("change", (e) => {
+    if (e.target && (e.target.id === "userRoleFilter" || e.target.id === "userStatusFilter")) {
+        renderUsersPage();
+    }
+});
+
+// Run renderUsersPage on DOM Ready
+if (document.readyState === "loading") {
+    document.addEventListener("DOMContentLoaded", renderUsersPage);
+} else {
+    renderUsersPage();
 }

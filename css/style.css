@@ -2394,3 +2394,80 @@ body.dark-mode .activity-details p {
         padding: 0 8px;
     }
 }
+
+/* =========================================
+   ROLE & USER STATUS BADGES & PERMISSION UTILITIES
+   ========================================= */
+
+.user-role-badge {
+    display: inline-flex;
+    align-items: center;
+    gap: 4px;
+    padding: 3px 8px;
+    border-radius: 20px;
+    font-size: 11px;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.3px;
+}
+
+.badge-admin {
+    background: rgba(99, 102, 241, 0.12);
+    color: #4f46e5;
+    border: 1px solid rgba(99, 102, 241, 0.25);
+}
+
+.badge-accountant {
+    background: rgba(16, 185, 129, 0.12);
+    color: #059669;
+    border: 1px solid rgba(16, 185, 129, 0.25);
+}
+
+.badge-viewer {
+    background: rgba(245, 158, 11, 0.12);
+    color: #d97706;
+    border: 1px solid rgba(245, 158, 11, 0.25);
+}
+
+.status-badge {
+    display: inline-flex;
+    align-items: center;
+    gap: 5px;
+    padding: 3px 10px;
+    border-radius: 20px;
+    font-size: 11px;
+    font-weight: 600;
+}
+
+.status-badge.active {
+    background: #dcfce7;
+    color: #15803d;
+}
+
+.status-badge.inactive {
+    background: #fee2e2;
+    color: #b91c1c;
+}
+
+.status-badge .dot {
+    width: 6px;
+    height: 6px;
+    border-radius: 50%;
+    background: currentColor;
+}
+
+/* Viewer Permission Class Utility */
+body.is-viewer .role-hide-viewer,
+body.is-viewer .add-transaction-btn,
+body.is-viewer .btn-action-main,
+body.is-viewer button[onclick*="openModal"],
+body.is-viewer .table-actions .btn-edit,
+body.is-viewer .table-actions .btn-delete {
+    display: none !important;
+}
+
+body.is-viewer .role-disabled {
+    opacity: 0.5 !important;
+    pointer-events: none !important;
+    cursor: not-allowed !important;
+}
